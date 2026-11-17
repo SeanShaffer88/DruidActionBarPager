@@ -1,0 +1,6 @@
+<Bindings>
+  <Binding name="DABP_TOGGLE_EXTRA1" header="DRUIDACTIONBARPAGER">--[[dummy]]</Binding>
+  <Binding name="DABP_TOGGLE_EXTRA2" header="DRUIDACTIONBARPAGER">--[[dummy]]</Binding>
+  <Binding name="DABP_TOGGLE_EXTRA3" header="DRUIDACTIONBARPAGER">--[[dummy]]</Binding>
+  <Binding name="DABP_TOGGLE_ALL_EXTRAS" header="DRUIDACTIONBARPAGER">--[[dummy]]</Binding>
+</Bindings>

@@ -1,6 +1,6 @@
 ## Interface: 16001
 ## Title: |cffff7d0aDruidActionBarPager|r
-## Notes: Automatically switches your main action bar to a different page for each druid combat form (Bear, Cat, Moonkin).
+## Notes: Switches the main and selected extra bars to druid form pages.
 ## Author: Malikor
 ## Version: 1.1.2-patched.2
 ## License: GPLv3
@@ -16,6 +16,7 @@ UI\Frames.lua
 UI\Snippets.lua
 Core\BarScan.lua
 UI\Attach.lua
+UI\KeyBindings.lua
 Core\Rebuild.lua
 Core\Events.lua
 UI\Commands.lua

@@ -66,6 +66,12 @@ local methods = {
     GetName = function(self) return self.name end,
     GetParent = function(self) return self.parent end,
     CallMethod = function() end,
+    SetSize = function() end,
+    SetAlpha = function() end,
+    SetPoint = function() end,
+    EnableMouse = function() end,
+    Show = function(self) self.visible = true end,
+    Hide = function(self) self.visible = false end,
 }
 
 local function newFrame(name, protected)
@@ -76,8 +82,9 @@ local function newFrame(name, protected)
 end
 
 UIParent = newFrame("UIParent", false)
-CreateFrame = function(_, name, _, template)
+CreateFrame = function(_, name, parent, template)
     local f = newFrame(name, template and template:find("Secure") ~= nil)
+    f.parent = parent
     if name then _G[name] = f end
     return f
 end
@@ -113,6 +120,28 @@ EnumerateFrames = nil
 SecureCmdOptionParse = nil
 UnregisterStateDriver = function(f, label) f.attrs["_driver-" .. label] = nil end
 SecureHandlerWrapScript = function(frame) wrapCalls[#wrapCalls + 1] = frame.name or "<unnamed bar>" end
+
+local bindings, bindingOverrides = {}, {}
+H.bindingOverrides = bindingOverrides
+function H.setBindingKey(action, first, second)
+    bindings[action] = { first, second }
+end
+GetBindingKey = function(action)
+    local keys = bindings[action]
+    if not keys then return nil end
+    return keys[1], keys[2]
+end
+ClearOverrideBindings = function(owner)
+    for i = #bindingOverrides, 1, -1 do
+        if bindingOverrides[i].owner == owner then table.remove(bindingOverrides, i) end
+    end
+end
+SetOverrideBindingClick = function(owner, priority, key, buttonName, mouseButton)
+    bindingOverrides[#bindingOverrides + 1] = {
+        owner = owner, priority = priority, key = key,
+        buttonName = buttonName, mouseButton = mouseButton,
+    }
+end
 
 -- Real state-driver semantics: evaluate the condition; run the handler when the state changes.
 local function evalCond(cond)
@@ -150,6 +179,11 @@ function H.gameEvaluate()
         header.attrs["state-formpage"] = state
         runSnippet(header, header.attrs["_onstate-formpage"], { newstate = state, control = header })
     end
+end
+
+function H.clickSecure(frame)
+    local code = frame and frame.attrs["_onclick"]
+    if code then return runSnippet(frame, code, { button = "LeftButton", down = false }) end
 end
 
 function H.setForm(i) currentForm = i end

@@ -1,25 +1,59 @@
--- Hands the main bar's buttons to the secure header, and hooks the bar so its
--- own paging can't undo the form page. Runs out of combat only. It only
--- records references and attributes on our own header; it never writes to
--- the bar addon's buttons from here.
+-- Connects the detected main bar and discovered extras to the secure header.
 local _, ns = ...
 local C = ns.Constants
-local Snippets = ns.Snippets
+local BUTTONS = C.BUTTONS_PER_PAGE
+local header = ns.Frames.header
 
 local At = {}
 ns.Attach = At
 
-local BUTTONS = C.BUTTONS_PER_PAGE
-local header = ns.Frames.header
-
--- What the last attach found, for /dabp debug and the rebuild key.
-local info = { name = "none", count = 0, wrapped = false, modes = "", found = false }
-
--- Bars already hooked (true) or that refused the hook (false).
+local info = {
+    name = "not scanned",
+    count = 0,
+    found = false,
+    modes = "none",
+    wrapped = false,
+    extras = {},
+    signature = "",
+    missingSelected = false,
+}
 local wrappedBars = {}
 
--- SetFrameRef errors on nil, so clearing a reference goes through the
--- attribute the reference is stored in.
+local WRAP_PRE = [[
+    if name and name:sub(1, 6) == "state-" then
+        local apply = control and control:GetAttribute("fp-page")
+            and self == control:GetFrameRef("bar")
+        if not apply and control and control:GetAttribute("fp-page") then
+            for i = 1, 10 do
+                if self == control:GetFrameRef("candidate" .. i .. "-bar")
+                    and control:GetAttribute("candidate-selected" .. i)
+                    and control:GetAttribute("candidate-enabled" .. i) then
+                    apply = true
+                    break
+                end
+            end
+        end
+        if apply then return nil, "dabp" end
+    end
+]]
+
+local WRAP_POST = [[
+    if not control or not control:GetAttribute("fp-page") then return end
+    local apply = self == control:GetFrameRef("bar")
+    if not apply then
+        for i = 1, 10 do
+            local ref = "candidate" .. i .. "-bar"
+            if self == control:GetFrameRef(ref)
+                and control:GetAttribute("candidate-selected" .. i)
+                and control:GetAttribute("candidate-enabled" .. i) then
+                apply = true
+                break
+            end
+        end
+    end
+    if apply then control:RunAttribute("fp-apply") end
+]]
+
 local function SetRef(label, frame)
     if frame then
         header:SetFrameRef(label, frame)
@@ -28,81 +62,165 @@ local function SetRef(label, frame)
     end
 end
 
--- Hooks a protected bar so the page is re-applied after any state change.
--- Any protected bar can be hooked: if it never changes state, the wrap does
--- nothing. A bar that refused the hook is tried again on the next attach.
--- Returns true if the bar is hooked.
+local function SetBarState(prefix, bar)
+    local state
+    if bar then
+        local ok, value = pcall(bar.GetAttribute, bar, "state")
+        if ok then state = value end
+    end
+    header:SetAttribute(prefix .. "labbase", state)
+end
+
+local function ParentOf(button)
+    local ok, parent = pcall(button.GetParent, button)
+    if ok then return parent end
+end
+
 local function WrapBar(bar)
     if not bar or wrappedBars[bar] then return wrappedBars[bar] or false end
     local okp, protected = pcall(bar.IsProtected, bar)
-    if not (okp and protected) then
-        return false
-    end
-    local ok = pcall(SecureHandlerWrapScript, bar, "OnAttributeChanged", header,
-        Snippets.WRAP_PRE, Snippets.WRAP_POST)
+    if not (okp and protected) then return false end
+    local ok = pcall(SecureHandlerWrapScript, bar, "OnAttributeChanged", header, WRAP_PRE, WRAP_POST)
     wrappedBars[bar] = ok and true or false
     return wrappedBars[bar]
 end
 
--- The bar a button belongs to: its parent frame.
-local function ParentOf(button)
-    local ok, parent = pcall(button.GetParent, button)
-    if ok then return parent end
-    return nil
-end
+local function AttachButton(i, button, active, prefix)
+    prefix = prefix or ""
+    if not button then
+        header:SetAttribute(prefix .. "mode" .. i, nil)
+        header:SetAttribute(prefix .. "idx" .. i, nil)
+        header:SetAttribute(prefix .. "base" .. i, nil)
+        return nil, nil
+    end
 
--- Writes the attributes the snippets read for button i. Returns its mode.
-local function AttachButton(i, button, active)
     local mode = ns.BarScan.ModeOf(button)
     local slot = ns.BarScan.BaseSlot(button, active) or ns.BarScan.SlotOf(button) or i
-    header:SetAttribute("mode" .. i, mode)
-    header:SetAttribute("idx" .. i, (slot - 1) % BUTTONS + 1)
-    header:SetAttribute("base" .. i, slot)
+    local index = ((slot - 1) % BUTTONS) + 1
+    header:SetAttribute(prefix .. "mode" .. i, mode)
+    header:SetAttribute(prefix .. "idx" .. i, index)
+    header:SetAttribute(prefix .. "base" .. i, slot)
     return mode, slot
 end
 
--- "lab x12, page x0" style summary of how many buttons use each mode.
-local function ModeSummary(modeCounts)
+local function ModeSummary(counts)
     local summary = {}
-    for mode, n in pairs(modeCounts) do
-        summary[#summary + 1] = mode .. " x" .. n
-    end
+    for mode, n in pairs(counts) do summary[#summary + 1] = mode .. " x" .. n end
     table.sort(summary)
     return table.concat(summary, ", ")
 end
 
--- Finds the main bar and attaches its buttons. Returns the button count.
 function At.Attach(force)
     local name, list, count, found = ns.BarScan.Find(force)
     local active = header:GetAttribute("fp-active")
+    local candidates = ns.BarScan.FindExtras(false)
+    local db = ns.Settings.Get()
+    local selectedById, candidateById = {}, {}
+    for slot = 1, C.MAX_ADDITIONAL_BARS do
+        local id = db.additionalBars[slot]
+        if id then selectedById[id] = slot end
+    end
+    for index, candidate in ipairs(candidates) do candidateById[candidate.id] = index end
 
-    local modeCounts, bases = {}, {}
+    local bases, mainCounts = {}, {}
     local bar
     for i = 1, BUTTONS do
-        local button = list[i]
+        local button = list and list[i]
         SetRef("button" .. i, button)
         if button then
-            local mode, slot = AttachButton(i, button, active)
+            local mode, slot = AttachButton(i, button, active, "")
             bases[button] = slot
-            modeCounts[mode] = (modeCounts[mode] or 0) + 1
-            -- Every mode needs the parent bar: its own paging (Blizzard's bonus
-            -- bar, Bartender4, ...) is what overwrites our page, so the bar is
-            -- hooked, page-mode buttons included.
+            mainCounts[mode] = (mainCounts[mode] or 0) + 1
             bar = bar or ParentOf(button)
+        else
+            AttachButton(i, nil, active, "")
         end
     end
-    ns.BarScan.SetBaseSlots(bases)
     SetRef("bar", bar)
+    SetBarState("", bar)
+    local mainWrapped = WrapBar(bar)
 
-    info.name = name
-    info.count = count
-    info.found = found
-    info.modes = ModeSummary(modeCounts)
-    info.wrapped = WrapBar(bar)
-    return count
+    for index, candidate in ipairs(candidates) do
+        local prefix = "candidate" .. index .. "-"
+        local oldId = header:GetAttribute(prefix .. "id")
+        if oldId ~= candidate.id then header:SetAttribute("candidate-enabled" .. index, true) end
+        header:SetAttribute(prefix .. "id", candidate.id)
+        header:SetAttribute("candidate-selected" .. index, selectedById[candidate.id] ~= nil)
+        if header:GetAttribute("candidate-enabled" .. index) == nil then
+            header:SetAttribute("candidate-enabled" .. index, true)
+        end
+
+        local candidateBar, candidateCounts = nil, {}
+        for i = 1, BUTTONS do
+            local button = candidate.buttons[i]
+            SetRef(prefix .. "button" .. i, button)
+            if button then
+                local mode, slot = AttachButton(i, button, active, prefix)
+                bases[button] = candidate.slots[i] or slot
+                candidateCounts[mode] = (candidateCounts[mode] or 0) + 1
+                candidateBar = candidateBar or ParentOf(button)
+            else
+                AttachButton(i, nil, active, prefix)
+            end
+        end
+        SetRef(prefix .. "bar", candidateBar)
+        SetBarState(prefix, candidateBar)
+        if selectedById[candidate.id] then WrapBar(candidateBar) end
+    end
+
+    for index = #candidates + 1, C.MAX_DISCOVERED_BARS do
+        local prefix = "candidate" .. index .. "-"
+        header:SetAttribute(prefix .. "id", nil)
+        header:SetAttribute("candidate-selected" .. index, false)
+        header:SetAttribute("candidate-enabled" .. index, nil)
+        SetRef(prefix .. "bar", nil)
+        SetBarState(prefix, nil)
+        for i = 1, BUTTONS do
+            SetRef(prefix .. "button" .. i, nil)
+            AttachButton(i, nil, active, prefix)
+        end
+    end
+
+    local extras, missingSelected, selectedIds = {}, false, {}
+    for slot = 1, C.MAX_ADDITIONAL_BARS do
+        local id = db.additionalBars[slot]
+        local index = id and candidateById[id]
+        header:SetAttribute("selectedCandidate" .. slot, index)
+        if id then
+            selectedIds[#selectedIds + 1] = id
+            if index then
+                local candidate = candidates[index]
+                extras[#extras + 1] = {
+                    name = candidate.label,
+                    count = candidate.count,
+                    visible = candidate.visibleCount > 0,
+                    candidate = index,
+                    slot = slot,
+                }
+            else
+                missingSelected = true
+            end
+        end
+    end
+
+    local candidateIds = {}
+    for _, candidate in ipairs(candidates) do candidateIds[#candidateIds + 1] = candidate.id end
+    local signature = table.concat(candidateIds, ";") .. "||" .. table.concat(selectedIds, ";")
+
+    ns.BarScan.SetBaseSlots(bases)
+    info = {
+        name = name or "unknown",
+        count = count or 0,
+        found = not not found,
+        modes = ModeSummary(mainCounts),
+        wrapped = mainWrapped,
+        extras = extras,
+        signature = signature,
+        missingSelected = missingSelected,
+    }
+    return info.count
 end
 
--- The information from the last attach (name, count, modes, wrapped).
 function At.Info()
     return info
 end
