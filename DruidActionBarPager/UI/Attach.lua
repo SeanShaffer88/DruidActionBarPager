@@ -13,7 +13,7 @@ local BUTTONS = C.BUTTONS_PER_PAGE
 local header = ns.Frames.header
 
 -- What the last attach found, for /dabp debug and the rebuild key.
-local info = { name = "none", count = 0, wrapped = false, modes = "" }
+local info = { name = "none", count = 0, wrapped = false, modes = "", found = false }
 
 -- Bars already hooked (true) or that refused the hook (false).
 local wrappedBars = {}
@@ -73,7 +73,7 @@ end
 
 -- Finds the main bar and attaches its buttons. Returns the button count.
 function At.Attach(force)
-    local name, list, count = ns.BarScan.Find(force)
+    local name, list, count, found = ns.BarScan.Find(force)
     local active = header:GetAttribute("fp-active")
 
     local modeCounts, bases = {}, {}
@@ -96,6 +96,7 @@ function At.Attach(force)
 
     info.name = name
     info.count = count
+    info.found = found
     info.modes = ModeSummary(modeCounts)
     info.wrapped = WrapBar(bar)
     return count
