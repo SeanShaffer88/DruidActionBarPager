@@ -1,6 +1,6 @@
 # DruidActionBarPager — Features
 
-The full feature list for DruidActionBarPager 1.1.2-patched.1 for WoW Forever
+The full feature list for DruidActionBarPager 1.1.2-patched.2 for WoW Forever
 (Interface 16001, game version 1.60.1). For the short version see `README.md`;
 for store-listing copy see `DESCRIPTION.md`.
 
@@ -42,6 +42,11 @@ DruidActionBarPager is by Malikor, released under the GNU GPL v3.
   secure state driver when settings change, form pages are reapplied only
   when the attached third-party bar changes its own page, and original
   button slots are preserved during rebuilds while a form page is active.
+- 1.1.2-patched.2: the main bar is found for more bar addons (Neuron by name,
+  and LibActionButton-based bars and bars with unnamed buttons by screen scan),
+  paging is re-applied after any bar state change, the page holds on Blizzard's
+  own bar, shapeshifting no longer triggers a rebuild, and the code is split
+  into modules.
 
 ## Action bar addon support
 
