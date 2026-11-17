@@ -5,7 +5,7 @@
 **Automatic action bar paging for druid forms in WoW Forever** — by Malikor.
 Switches your main action bar to a different page for each druid form
 (Bear page 2, Cat page 3, Moonkin page 4 by default), works in combat, and
-works with Blizzard's bars, EllesmereUI, Bartender4, ElvUI and Dominos.
+works with Blizzard's bars, EllesmereUI, Bartender4, ElvUI, Dominos, Neuron, and most other bar addons (including LibActionButton-based bars).
 
 ![DruidActionBarPager logo](DruidActionBarPager/logo.png)
 

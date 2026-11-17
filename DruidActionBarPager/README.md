@@ -48,9 +48,10 @@ DruidActionBarPager finds whichever main bar is actually on your screen and swit
 | Bartender4 | BT4Button1–12 (bar 1) |
 | ElvUI | ElvUI_Bar1Button1–12 (bar 1) |
 | Dominos | DominosActionButton1–12 (bar 1) |
-| Other bar addons | Scans the screen for the visible buttons showing slots 1–12 |
+| Neuron | NeuronActionBar1_ActionButton1–12 (bar 1) |
+| Any other bar addon (including LibActionButton-based bars such as AzeriteUI and ConsolePort, and bars with unnamed buttons) | Scans the screen for the visible buttons showing slots 1–12 and groups them by bar |
 
-Bartender4, ElvUI and Dominos have their own stance/form paging. You don't need to turn it off: when they switch bar 1 for a form, DruidActionBarPager immediately puts your DruidActionBarPager page back. If you'd rather use their built-in paging, type `/dabp off`.
+Bartender4, ElvUI, Dominos and Neuron have their own stance/form paging. You don't need to turn it off: when they switch bar 1 for a form, DruidActionBarPager immediately puts your DruidActionBarPager page back. If you'd rather use their built-in paging, type `/dabp off`.
 
 DruidActionBarPager only switches the bar that shows page 1 (your main bar). Type `/dabp debug` to see which bar it's driving.
 

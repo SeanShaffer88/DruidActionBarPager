@@ -294,6 +294,7 @@ local KNOWN_BARS = {
     { name = "Bartender4",  prefix = "BT4Button" },
     { name = "ElvUI",       prefix = "ElvUI_Bar1Button" },
     { name = "Dominos",     prefix = "DominosActionButton" },
+    { name = "Neuron",      prefix = "NeuronActionBar1_ActionButton" },
     { name = "Blizzard",    prefix = "ActionButton" },
 }
 
@@ -307,9 +308,15 @@ local function IsShown(f)
 end
 
 local function SlotOf(b)
+    -- LibActionButton (Bartender4, ElvUI, ConsolePort, AzeriteUI...) keeps the
+    -- slot it is showing in _state_action; its .action field stays 0.
+    if b._state_type == "action" then
+        local s = tonumber(b._state_action)
+        if s and s > 0 then return s end
+    end
     local ok, a = pcall(b.GetAttribute, b, "action")
     a = ok and tonumber(a) or nil
-    if not a and type(b.action) == "number" then a = b.action end
+    if not a and type(b.action) == "number" and b.action > 0 then a = b.action end
     return a
 end
 
@@ -326,12 +333,22 @@ end
 -- that covers the most of slots 1-12.
 -- One shared function for the scan (no closure per frame). Forbidden or
 -- odd frames can error, so it runs under pcall.
+-- Named buttons are grouped by their name without the trailing number (one
+-- group per bar). Unnamed buttons -- common in newer bar addons -- are grouped
+-- by their parent frame, which is the bar they belong to.
 local function ScanCheck(f, active)
     if not f.IsVisible or not f:IsVisible() then return nil end
     if not f.IsProtected or not f:IsProtected() then return nil end
     -- A previously discovered button can currently point outside slots 1-12.
     local slot = (active and attachedBase[f]) or SlotOf(f)
-    return slot, f:GetName()
+    local name = f:GetName()
+    local group
+    if name and name ~= "" then
+        group = (name:gsub("%d+$", ""))
+    else
+        group = f:GetParent()
+    end
+    return slot, group
 end
 
 local function ScanForMainBar()
@@ -341,11 +358,14 @@ local function ScanForMainBar()
     local f, guard = EnumerateFrames(), 0
     while f and guard < 200000 do
         guard = guard + 1
-        local ok, slot, name = pcall(ScanCheck, f, active)
-        if ok and slot and name and slot >= 1 and slot <= 12 then
-            local prefix = name:gsub("%d+$", "")
-            local g = groups[prefix]
-            if not g then g = { buttons = {}, count = 0 }; groups[prefix] = g end
+        local ok, slot, group = pcall(ScanCheck, f, active)
+        if ok and slot and group and slot >= 1 and slot <= 12 then
+            local g = groups[group]
+            if not g then
+                g = { buttons = {}, count = 0 }
+                g.label = type(group) == "string" and group or "unnamed bar"
+                groups[group] = g
+            end
             if not g.buttons[slot] then
                 g.buttons[slot] = f
                 g.count = g.count + 1
@@ -353,12 +373,12 @@ local function ScanForMainBar()
         end
         f = EnumerateFrames(f)
     end
-    local bestName, best
-    for prefix, g in pairs(groups) do
-        if not best or g.count > best.count then bestName, best = prefix, g end
+    local bestLabel, best
+    for _, g in pairs(groups) do
+        if not best or g.count > best.count then bestLabel, best = g.label, g end
     end
     if best and best.count >= 6 then
-        return bestName, best.buttons, best.count
+        return bestLabel, best.buttons, best.count
     end
     return nil
 end
@@ -398,18 +418,25 @@ local function ModeOf(b)
     if ok and type(upd) == "string" and type(b.state_types) == "table" then
         return "lab"
     end
-    local okid, id = pcall(b.GetID, b)
-    if okid and id and id > 0 then
-        return "page"
+    -- Only Blizzard's own action buttons take an actionpage override. Other
+    -- addons' buttons often carry an ID too, where the override does nothing,
+    -- so those are treated as fixed-slot buttons instead.
+    local okn, name = pcall(b.GetName, b)
+    if okn and type(name) == "string" and name:find("^ActionButton%d+$") then
+        local okid, id = pcall(b.GetID, b)
+        if okid and id and id > 0 then
+            return "page"
+        end
     end
     return "action"
 end
 
--- A bar addon with its own paging (Bartender4, ElvUI, Dominos...) may reset
--- its buttons when its page changes -- and druid forms often trigger exactly
--- that. Wrapping the bar makes DruidActionBarPager re-apply its page right after.
+-- A bar addon with its own paging (Blizzard's bonus bars, Bartender4, ElvUI,
+-- AzeriteUI, Neuron...) may reset its buttons when its state changes -- and
+-- druid forms often trigger exactly that. Wrapping the bar makes
+-- DruidActionBarPager re-apply its page right after any "state-" change.
 local WRAP_PRE = [[
-    if name == "state-page" or name == "state-overridebar" or name == "state-overridepage" then
+    if name and name:sub(1, 6) == "state-" then
         return nil, "dabp"
     end
 ]]
@@ -421,9 +448,10 @@ local WRAP_POST = [[
 
 local function WrapBar(bar)
     if not bar or wrappedBars[bar] then return wrappedBars[bar] or false end
+    -- Any protected bar can be hooked: if it never changes state, the wrap
+    -- does nothing. Bars without a protected state can't be hooked at all.
     local okp, protected = pcall(bar.IsProtected, bar)
-    local oka, snippet = pcall(bar.GetAttribute, bar, "_onstate-page")
-    if not (okp and protected and oka and type(snippet) == "string") then
+    if not (okp and protected) then
         return false
     end
     local ok = pcall(SecureHandlerWrapScript, bar, "OnAttributeChanged", header, WRAP_PRE, WRAP_POST)
