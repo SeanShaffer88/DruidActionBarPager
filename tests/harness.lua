@@ -26,12 +26,18 @@ H.wrapCalls = wrapCalls
 local allFrames = {}
 H.allFrames = allFrames
 
+-- Lua 5.1 (the dialect WoW uses): compile a chunk and give it an environment.
+local function compile(code, chunkname, env)
+    local fn, err = loadstring(code, chunkname)
+    assert(fn, err)
+    if env then setfenv(fn, env) end
+    return fn
+end
+
 local function runSnippet(frame, code, extra)
     local env = setmetatable({ self = frame, tonumber = tonumber, pairs = pairs, ipairs = ipairs, type = type }, { __index = _G })
     for k, v in pairs(extra or {}) do env[k] = v end
-    local fn, err = load(code, "snippet", "t", env)
-    assert(fn, err)
-    return fn()
+    return compile(code, "=snippet", env)()
 end
 
 local methods = {
@@ -153,10 +159,18 @@ function H.setForms(list, names)
 end
 
 -- Load the addon with the given saved settings and fire PLAYER_LOGIN etc. via its OnEvent.
-function H.load(src, db)
+-- files: the addon's .toc file list, in load order (ADDON_DIR is the addon folder).
+-- Every file gets the addon name and one shared namespace table, as in WoW.
+function H.load(files, db)
     DruidActionBarPagerDB = db
-    local chunk = assert(load(src, "@DruidActionBarPager.lua", "t"))
-    chunk("DruidActionBarPager")
+    local ns = {}
+    for _, name in ipairs(files) do
+        local path = ADDON_DIR .. "/" .. name
+        local fh = assert(io.open(path, "rb"))
+        local src = fh:read("*a")
+        fh:close()
+        compile(src, "@" .. name)("DruidActionBarPager", ns)
+    end
     header = _G.DruidActionBarPagerHeader
     -- Fire the events the addon registered for, in login order.
     local evFrame

@@ -1,5 +1,4 @@
 local H = dofile(TESTDIR .. "/harness.lua")
-local src = ADDON_SRC
 local results = {}
 local function check(name, cond, detail)
     results[#results + 1] = (cond and "PASS " or "FAIL ") .. name .. (detail and (" [" .. tostring(detail) .. "]") or "")
@@ -15,7 +14,7 @@ local NAMES = { [5487] = "Dire Bear Form", [768] = "Cat Form", [24858] = "Moonki
 -- Scenario 1: /reload while in bear form, saved bear=6, cat=7.
 H.setForms(FORMS, NAMES)
 H.setForm(1)
-H.load(src, { enabled = true, version = 3, pages = { bear = 6, cat = 7, travel = 0, aquatic = 0, moonkin = 4, tree = 4 } })
+H.load(ADDON_FILES, { enabled = true, version = 3, pages = { bear = 6, cat = 7, travel = 0, aquatic = 0, moonkin = 4, tree = 4 } })
 local header = H.header()
 check("S1 bar hook: MainMenuBar wrapped (Blizzard page-mode buttons)", #H.wrapCalls > 0 and H.wrapCalls[1] == "MainMenuBar", table.concat(H.wrapCalls, ","))
 check("S1 registration leaves state armed for next evaluation", header.attrs["state-formpage"] == "refresh", header.attrs["state-formpage"])

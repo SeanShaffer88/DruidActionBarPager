@@ -8,11 +8,19 @@ Lua logic with stubbed WoW frames; they do NOT replace testing in the game clien
 import os
 import sys
 
-from lupa import LuaRuntime
+from lupa.lua51 import LuaRuntime  # Lua 5.1: the dialect WoW uses
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-ADDON = os.path.join(ROOT, "DruidActionBarPager", "DruidActionBarPager.lua")
+ADDON_DIR = os.path.join(ROOT, "DruidActionBarPager")
+
+
+def toc_files():
+    """Lua files listed in the .toc, in load order."""
+    with open(os.path.join(ADDON_DIR, "DruidActionBarPager.toc"), encoding="utf-8") as fh:
+        lines = [ln.strip() for ln in fh]
+    names = [ln for ln in lines if ln and not ln.startswith("#") and ln.endswith(".lua")]
+    return [name.replace("\\", "/") for name in names]  # .toc uses backslashes
 FAMILIES = ["blizzard", "bartender4", "azerite", "unnamed", "dominos", "neuron", "ellesmere"]
 
 
@@ -20,7 +28,8 @@ def run(script, extra):
     lua = LuaRuntime(unpack_returned_tuples=True)
     g = lua.globals()
     g.TESTDIR = HERE
-    g.ADDON_SRC = open(ADDON, encoding="utf-8").read()
+    g.ADDON_DIR = ADDON_DIR
+    g.ADDON_FILES = lua.table_from(toc_files())
     for k, v in extra.items():
         setattr(g, k, v)
     return lua.execute(open(os.path.join(HERE, script), encoding="utf-8").read())
