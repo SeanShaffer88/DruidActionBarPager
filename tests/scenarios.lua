@@ -31,11 +31,11 @@ check("S2 bear again -> page 6", header.attrs["fp-page"] == 6 and H.buttons[1].a
 
 -- Scenario 3: a plain shift fires UPDATE_SHAPESHIFT_FORMS but the form list is unchanged.
 H.runTimers()
+check("S3 found bar skips the late rescan", H.pendingTimers() == 0, H.pendingTimers())
 H.fire("UPDATE_SHAPESHIFT_FORMS")
-H.runTimers()
-local before = H.pendingTimers()
+check("S3 first unchanged shift after login skips rebuild", H.pendingTimers() == 0, H.pendingTimers())
 H.fire("UPDATE_SHAPESHIFT_FORMS")
-check("S3 unchanged form list on shift: no rebuild scheduled", H.pendingTimers() == 0, H.pendingTimers())
+check("S3 later unchanged shifts skip rebuild", H.pendingTimers() == 0, H.pendingTimers())
 
 -- Scenario 4: learning a new form does trigger a rebuild.
 local extended = { FORMS[1], FORMS[2], FORMS[3], { spellID = 1066, icon = "Ability_Druid_AquaticForm" } }
@@ -53,6 +53,7 @@ H.log[#H.log] = nil
 SlashCmdList.DRUIDACTIONBARPAGER("debug")
 local dbg = table.concat(H.log, "\n")
 check("S6 debug reports bar hooked", dbg:find("hooked into the bar's own paging: yes", 1, true) ~= nil)
+check("S6 debug confirms bar detection", dbg:find("main bar detected: yes", 1, true) ~= nil)
 
 for _, r in ipairs(results) do print(r) end
 return table.concat(results, "\n")
