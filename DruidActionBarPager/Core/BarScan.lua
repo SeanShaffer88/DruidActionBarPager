@@ -147,6 +147,7 @@ function B.FindExtras(force)
 
     local active = ns.Frames.header:GetAttribute("fp-active")
     local groupsByOwner, groups = {}, {}
+    local idOccurrences = {}
     local frame = EnumerateFrames()
     local guard = 0
     while frame and guard < 200000 do
@@ -160,8 +161,14 @@ function B.FindExtras(force)
             if not group then
                 local firstSlot = block * BUTTONS + 1
                 local label = GroupLabel(owner)
+                local idBase = label .. "@" .. firstSlot
+                local occurrence = (idOccurrences[idBase] or 0) + 1
+                idOccurrences[idBase] = occurrence
+                local id = idBase
+                if occurrence > 1 then id = idBase .. "~" .. occurrence end
                 group = {
-                    id = label .. "@" .. firstSlot .. "#" .. tostring(#groups + 1),
+                    id = id,
+                    idBase = idBase,
                     label = label,
                     firstSlot = firstSlot,
                     buttons = {},

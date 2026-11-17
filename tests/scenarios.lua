@@ -60,7 +60,8 @@ check("S6 debug reports bar hooked", dbg:find("hooked into the bar's own paging:
 check("S6 debug confirms bar detection", dbg:find("main bar detected: yes", 1, true) ~= nil)
 
 -- Scenario 7: select three extra bars, bind per-bar and global secure toggles.
-local function addExtraBar(name, firstSlot)
+local function addExtraBar(name, firstSlot, insertBeforeName)
+    local firstCreated = #H.allFrames + 1
     local bar = H.newFrame(name, true)
     for i = 1, 12 do
         local button = H.newFrame(name .. "Button" .. i, true)
@@ -68,6 +69,21 @@ local function addExtraBar(name, firstSlot)
         button.id = i
         button.attrs.action = firstSlot + i - 1
     end
+    if insertBeforeName then
+        local created = {}
+        for i = firstCreated, #H.allFrames do
+            created[#created + 1] = H.allFrames[i]
+        end
+        for i = #H.allFrames, firstCreated, -1 do table.remove(H.allFrames, i) end
+
+        local insertAt
+        for i, frame in ipairs(H.allFrames) do
+            if frame.name == insertBeforeName then insertAt = i; break end
+        end
+        assert(insertAt, "insert point not found: " .. insertBeforeName)
+        for i = #created, 1, -1 do table.insert(H.allFrames, insertAt, created[i]) end
+    end
+    return bar
 end
 addExtraBar("TestBar2", 13)
 addExtraBar("TestBar3", 25)
@@ -131,6 +147,22 @@ H.gameEvaluate()
 check("S7 removing a selected bar restores its original slot",
     extra1.attrs.action == 13 and extra2.attrs.action == 61 and extra3.attrs.action == 61)
 check("S7 deselection keeps remaining stable IDs", #DruidActionBarPagerDB.additionalBars == 2)
+
+-- Scenario 8: migrate old discovery-order IDs after another bar appears earlier.
+DruidActionBarPagerDB.additionalBars[1] = "TestBar3Button@25#3"
+DruidActionBarPagerDB.additionalBars[2] = "TestBar4Button@37#4"
+addExtraBar("AABar", 49, "TestBar3Button1")
+SlashCmdList.DRUIDACTIONBARPAGER("bear 5")
+local selected1 = header.attrs["selectedCandidate1"]
+local selected2 = header.attrs["selectedCandidate2"]
+local selectedButton1 = selected1 and header.refs["candidate" .. selected1 .. "-button1"]
+local selectedButton2 = selected2 and header.refs["candidate" .. selected2 .. "-button1"]
+check("S8 old saved IDs migrate after discovery order changes",
+    DruidActionBarPagerDB.additionalBars[1] == "TestBar3Button@25"
+        and DruidActionBarPagerDB.additionalBars[2] == "TestBar4Button@37")
+check("S8 selected bars still resolve after reorder",
+    selectedButton1 and selectedButton1.name == "TestBar3Button1"
+        and selectedButton2 and selectedButton2.name == "TestBar4Button1")
 
 for _, r in ipairs(results) do print(r) end
 return table.concat(results, "\n")
