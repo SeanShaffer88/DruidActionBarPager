@@ -169,6 +169,21 @@ local function ClassifyForm(index)
     return nil
 end
 
+-- A cheap summary of the form list (count, spell IDs, names, keys). It only
+-- changes when forms are learned or the spell data they depend on loads, so
+-- comparing it tells a real form-list change from an ordinary shift.
+local lastFormSignature
+
+local function FormSignature()
+    local parts = {}
+    local count = GetNumShapeshiftForms and GetNumShapeshiftForms() or 0
+    for i = 1, count do
+        local spellID, name = GetFormDetails(i)
+        parts[#parts + 1] = tostring(spellID) .. ":" .. tostring(name) .. ":" .. tostring(ClassifyForm(i))
+    end
+    return count .. "|" .. concat(parts, ",")
+end
+
 ---------------------------------------------------------------------------
 -- Secure paging header
 --
@@ -449,7 +464,10 @@ local function AttachButtons(force)
             header:SetAttribute("idx" .. i, (slot - 1) % 12 + 1)
             header:SetAttribute("base" .. i, slot)
             modes[mode] = (modes[mode] or 0) + 1
-            if not bar and mode ~= "page" then
+            -- Every mode needs the parent bar: its own paging (Blizzard's
+            -- bonus bar, Bartender4, ...) is what overwrites our page, so
+            -- WrapBar has to hook it -- page-mode buttons included.
+            if not bar then
                 local okp, parent = pcall(b.GetParent, b)
                 if okp then bar = parent end
             end
@@ -507,14 +525,17 @@ local function Rebuild()
     -- right now (from DruidActionBarPager's own, insecure code) never touches a bar.
     header:SetAttribute("state-formpage", "init")
     RegisterStateDriver(header, "formpage", condition)
-    if header:GetAttribute("fp-active") then
-        local wanted = tonumber(header:GetAttribute("state-formpage"))
-        if wanted and wanted <= 0 then wanted = nil end
-        if wanted ~= header:GetAttribute("fp-page") then
-            -- The next game-driven evaluation will apply or restore the page,
-            -- even if the current form never changes or paging is disabled.
-            header:SetAttribute("state-formpage", "refresh")
-        end
+    -- The registration evaluation was skipped, so the page it wanted may not
+    -- be applied yet (e.g. after /reload while shifted). Compare what the
+    -- driver wants with what is applied -- not only when a page is already
+    -- active, which is never true right after login -- and re-arm the driver
+    -- if they differ, so the next game-driven evaluation applies it.
+    local wanted = tonumber(header:GetAttribute("state-formpage"))
+    if wanted and wanted <= 0 then wanted = nil end
+    if wanted ~= header:GetAttribute("fp-page") then
+        -- The next game-driven evaluation will apply or restore the page,
+        -- even if the current form never changes or paging is disabled.
+        header:SetAttribute("state-formpage", "refresh")
     end
 end
 
@@ -722,7 +743,15 @@ events:SetScript("OnEvent", function(self, event, arg1, arg2)
         return
     end
 
-    -- UPDATE_SHAPESHIFT_FORMS, SPELLS_CHANGED
+    -- UPDATE_SHAPESHIFT_FORMS, SPELLS_CHANGED.
+    -- These also fire every time you shift. A shift doesn't change the form
+    -- list, so skip the rebuild (and its debounce delay) unless it did. The
+    -- game's own state driver already switches the page on the shift itself.
+    local signature = FormSignature()
+    if signature == lastFormSignature and not pendingRebuild then
+        return
+    end
+    lastFormSignature = signature
     RequestRebuild()
 end)
 

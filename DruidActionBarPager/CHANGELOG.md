@@ -2,6 +2,13 @@
 
 All notable changes to DruidActionBarPager are documented here.
 
+## [Unreleased]
+
+### Fixed
+- The form page now holds on the bar that actually switches. The Blizzard main bar's own paging (bonus bar) was never hooked, so it could overwrite the page the addon had applied (e.g. page 6 applied, page 2 shown). Blizzard's bar is now hooked the same way as the bar addons.
+- After `/reload` while shifted, the page the form wants is armed right after login, so the next form event applies it. Previously it could stay on the default page until you shifted out and back in.
+- Shapeshifting no longer triggers a bar rebuild and its 0.2 s debounce. A rebuild only runs when the form list changes (forms learned, spell data loaded), so shifts switch the bar without the extra delay.
+
 ## [1.1.2-patched.1] - 2026-11-14
 
 - Restore or replace an active form page through the secure state driver when settings change.
