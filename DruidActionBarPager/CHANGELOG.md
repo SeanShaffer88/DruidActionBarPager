@@ -2,7 +2,7 @@
 
 All notable changes to DruidActionBarPager are documented here.
 
-## [Unreleased]
+## [1.1.2-patched.3] - 2026-11-17
 
 ### Added
 - Select up to three extra action bars to mirror form paging, with per-bar and all-extra hotkeys.
