@@ -1,0 +1,103 @@
+name: Package published addon
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published release tag to package
+        required: true
+        type: string
+  pull_request:
+    paths:
+      - '.github/workflows/package-addon-release.yml'
+      - 'DruidActionBarPager/**'
+      - 'tests/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag || github.sha }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run addon tests
+        run: |
+          python -m pip install --disable-pip-version-check lupa==2.8
+          python tests/run.py
+      - name: Build and validate addon ZIP
+        id: package
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          set -euo pipefail
+          ADDON_DIR=DruidActionBarPager
+          TOC="$ADDON_DIR/DruidActionBarPager.toc"
+          test -f "$TOC"
+          TOC_VERSION="$(sed -n 's/^## Version: //p' "$TOC" | head -n 1)"
+          if [[ -n "$RELEASE_TAG" ]]; then
+            [[ "$RELEASE_TAG" == v* ]] || { echo "Release tag must start with v: $RELEASE_TAG" >&2; exit 1; }
+            EXPECTED_VERSION="${RELEASE_TAG#v}"
+          else
+            EXPECTED_VERSION="$TOC_VERSION"
+          fi
+          [[ "$TOC_VERSION" == "$EXPECTED_VERSION" ]] || { echo "Tag version $EXPECTED_VERSION does not match TOC version $TOC_VERSION" >&2; exit 1; }
+          python - <<'PY'
+          from pathlib import Path
+          addon = Path('DruidActionBarPager')
+          toc = addon / 'DruidActionBarPager.toc'
+          for raw in toc.read_text(encoding='utf-8').splitlines():
+              entry = raw.strip()
+              if not entry or entry.startswith('#'): continue
+              path = addon / entry.replace('\\', '/')
+              if not path.is_file(): raise SystemExit(f'Missing TOC file: {path}')
+          PY
+          ZIP="DruidActionBarPager-${TOC_VERSION}.zip"
+          zip -qr "$ZIP" "$ADDON_DIR"
+          unzip -t "$ZIP" >/dev/null
+          unzip -Z1 "$ZIP" > "$RUNNER_TEMP/addon-zip-files.txt"
+          grep -Fxq 'DruidActionBarPager/DruidActionBarPager.toc' "$RUNNER_TEMP/addon-zip-files.txt"
+          grep -Fxq 'DruidActionBarPager/Core/Constants.lua' "$RUNNER_TEMP/addon-zip-files.txt"
+          sha256sum "$ZIP" > SHA256SUMS.txt
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+      - name: Save release files
+        uses: actions/upload-artifact@v4
+        with:
+          name: addon-release-files
+          path: |
+            DruidActionBarPager-*.zip
+            SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-assets:
+    if: ${{ github.event_name != 'pull_request' }}
+    needs: test-and-package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download release files
+        uses: actions/download-artifact@v4
+        with:
+          name: addon-release-files
+          path: dist
+      - name: Attach ZIP and checksum to GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          set -euo pipefail
+          [[ -n "$RELEASE_TAG" ]] || { echo 'Missing release tag' >&2; exit 1; }
+          [[ "$RELEASE_TAG" == v* ]] || { echo "Release tag must start with v: $RELEASE_TAG" >&2; exit 1; }
+          VERSION="${RELEASE_TAG#v}"
+          gh release upload "$RELEASE_TAG" "dist/DruidActionBarPager-${VERSION}.zip" dist/SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber
