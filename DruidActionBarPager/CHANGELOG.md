@@ -4,6 +4,8 @@ All notable changes to DruidActionBarPager are documented here.
 
 ## [Unreleased]
 
+## [1.1.2-patched.2] - 2026-11-17
+
 ### Added
 - Works with more action bar addons: Neuron is recognised by name, and any bar built on LibActionButton (AzeriteUI, ConsolePort and others) is found by the screen scan, which now reads LibActionButton's current slot.
 - Bars whose buttons have no names are found too: the scan groups unnamed buttons by their parent bar.
