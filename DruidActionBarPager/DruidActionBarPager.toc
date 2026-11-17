@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: |cffff7d0aDruidActionBarPager|r
+## Notes: Automatically switches your main action bar to a different page for each druid combat form (Bear, Cat, Moonkin).
+## Author: Malikor
+## Version: 1.1.2-patched.1
+## License: GPLv3
+## IconTexture: Interface\AddOns\DruidActionBarPager\icon
+## SavedVariables: DruidActionBarPagerDB
+
+DruidActionBarPager.lua
