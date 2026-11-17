@@ -28,6 +28,8 @@ local function OnPlayerLogin(self)
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("PLAYER_REGEN_ENABLED")
     self:RegisterEvent("SPELL_DATA_LOAD_RESULT")
+    -- A shapeshift event on login must not trigger a needless first rebuild.
+    lastFormSignature = ns.Forms.Signature()
     ns.Rebuild.Now(true)
 end
 
@@ -46,7 +48,11 @@ local function OnEnteringWorld()
     -- finish building theirs a moment later.
     ns.Rebuild.Request(true)
     if C_Timer and C_Timer.After then
-        C_Timer.After(C.LATE_REBUILD_DELAY, function() ns.Rebuild.Request(true) end)
+        C_Timer.After(C.LATE_REBUILD_DELAY, function()
+            -- Only retry when the initial scan fell back; a found bar needs no
+            -- second full-screen scan and driver reset.
+            if not ns.Attach.Info().found then ns.Rebuild.Request(true) end
+        end)
     end
 end
 
