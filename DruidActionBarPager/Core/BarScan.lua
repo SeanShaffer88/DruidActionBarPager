@@ -13,7 +13,7 @@ local BUTTONS = C.BUTTONS_PER_PAGE
 local baseSlots = {}
 
 -- Result of the last find, reused while its first button is still shown.
-local cachedName, cachedList, cachedCount
+local cachedName, cachedList, cachedCount, cachedFound
 
 local function IsShown(frame)
     local ok, visible = pcall(frame.IsVisible, frame)
@@ -117,24 +117,24 @@ local function FindKnownBar()
     for _, known in ipairs(C.KNOWN_BARS) do
         local list, count = ButtonsFromPrefix(known.prefix)
         if count > 0 and list[1] and IsShown(list[1]) then
-            return known.name, list, count
+            return known.name, list, count, true
         end
     end
     return nil
 end
 
 local function FindUncached()
-    local name, list, count = FindKnownBar()
-    if name then return name, list, count end
+    local name, list, count, found = FindKnownBar()
+    if name then return name, list, count, found end
 
     name, list, count = ScanForMainBar()
     if name then
-        return name .. " (auto-detected)", list, count
+        return name .. " (auto-detected)", list, count, true
     end
 
     -- Nothing visible (e.g. during a loading screen): fall back to Blizzard.
     list, count = ButtonsFromPrefix("ActionButton")
-    return "Blizzard", list, count
+    return "Blizzard", list, count, false
 end
 
 -- Returns the main bar's name, its buttons by slot, and the button count.
@@ -143,10 +143,10 @@ end
 -- a loading screen or a settings change, when the bar may have changed.
 function B.Find(force)
     if not force and cachedList and cachedList[1] and IsShown(cachedList[1]) then
-        return cachedName, cachedList, cachedCount
+        return cachedName, cachedList, cachedCount, cachedFound
     end
-    cachedName, cachedList, cachedCount = FindUncached()
-    return cachedName, cachedList, cachedCount
+    cachedName, cachedList, cachedCount, cachedFound = FindUncached()
+    return cachedName, cachedList, cachedCount, cachedFound
 end
 
 -- The first button of the last find, or nil.
