@@ -86,26 +86,31 @@ local function ScanForMainBar(active)
     local guard = 0
     while frame and guard < 200000 do
         guard = guard + 1
-        local ok, slot, group = pcall(ScanCheck, frame, active, false)
-        if ok and slot and slot >= 1 and slot <= BUTTONS and group then
-            local g = groups[group]
-            if not g then g = { list = {}, count = 0 }; groups[group] = g end
+        local ok, slot, owner = pcall(ScanCheck, frame, active, false)
+        if ok and slot and slot >= 1 and slot <= BUTTONS and owner then
+            local group = groups[owner]
+            if not group then
+                group = { list = {}, count = 0,
+                    label = type(owner) == "string" and owner or "unnamed bar" }
+                groups[owner] = group
+            end
             local index = ((slot - 1) % BUTTONS) + 1
-            if not g.list[index] then
-                g.list[index] = frame
-                g.count = g.count + 1
+            if not group.list[index] then
+                group.list[index] = frame
+                group.count = group.count + 1
             end
         end
         frame = EnumerateFrames(frame)
     end
 
-    local best, bestCount
+    local best
     for _, group in pairs(groups) do
-        if group.list[1] and (not bestCount or group.count > bestCount) then
-            best, bestCount = group, group.count
-        end
+        if not best or group.count > best.count then best = group end
     end
-    if best then return "scanned bar", best.list, best.count, true end
+    if best and best.count >= 6 then
+        return best.label .. " (auto-detected)", best.list, best.count, true
+    end
+    return nil
 end
 
 local function FindUncached(active)

@@ -72,7 +72,7 @@ Sn.APPLY = [[
     for candidate = 1, 10 do
         local prefix = "candidate" .. candidate .. "-"
         local enabled = page
-            and self:GetAttribute(prefix .. "selected")
+            and self:GetAttribute("candidate-selected" .. candidate)
             and self:GetAttribute("candidate-enabled" .. candidate)
         if enabled then
             applyBar(prefix .. "button", prefix, prefix .. "bar", page)
