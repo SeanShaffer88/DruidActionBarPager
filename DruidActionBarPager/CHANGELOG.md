@@ -2,7 +2,14 @@
 
 All notable changes to DruidActionBarPager are documented here.
 
-## [Unreleased]
+## [1.1.2-patched.3] - 2026-11-17
+
+### Added
+- Select up to three extra action bars to mirror form paging, with per-bar and all-extra hotkeys.
+- Release workflow builds an install-ready ZIP and SHA-256 checksum automatically.
+
+### Fixed
+- Avoid a needless rebuild on the first shapeshift after login, and skip the delayed full-screen rescan when a bar was already found.
 
 ## [1.1.2-patched.2] - 2026-11-17
 

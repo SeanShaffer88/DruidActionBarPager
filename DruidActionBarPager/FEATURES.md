@@ -1,6 +1,6 @@
 # DruidActionBarPager — Features
 
-The full feature list for DruidActionBarPager 1.1.2-patched.2 for WoW Forever
+The full feature list for DruidActionBarPager 1.1.2-patched.3 for WoW Forever
 (Interface 16001, game version 1.60.1). For the short version see `README.md`;
 for store-listing copy see `DESCRIPTION.md`.
 
@@ -9,7 +9,8 @@ DruidActionBarPager is by Malikor, released under the GNU GPL v3.
 ## Automatic form paging
 
 - Automatically switches the main action bar to a different page for each
-  druid combat form, the moment you shift.
+  druid combat form, the moment you shift. Up to three selected extra bars
+  can mirror the same page.
 - Default pages:
 
   | Form | Page |
@@ -35,7 +36,7 @@ DruidActionBarPager is by Malikor, released under the GNU GPL v3.
 - Paging works in combat, when druids shift the most.
 - Uses a secure state driver built from `[form:N]` macro conditions: the
   game itself evaluates the conditions and a small secure snippet repoints
-  the 12 main bar buttons whenever your form changes.
+  the 12 main bar buttons and selected extra bars whenever your form changes.
 - Changes made during combat are processed after combat ends; if a form
   page is active, the secure driver applies the change on its next update.
 - 1.1.2-patched.1: an active form page is restored or replaced through the
@@ -66,13 +67,16 @@ Finds whichever main bar is actually on your screen and switches that one:
 - Bartender4, ElvUI and Neuron have their own stance/form paging; it does
   not need to be turned off — when they switch bar 1 for a form,
   DruidActionBarPager immediately puts its own page back.
-- Only the bar that shows page 1 (your main bar) is switched.
+- The main bar always switches; up to three extra bars can be selected to
+  mirror its active form page. `/dabp bars` lists candidates and
+  `/dabp bar <number> on|off` selects them.
 - Each button is switched the way its bar expects: page overrides for
   Blizzard-style buttons, slot repointing for fixed-slot buttons
   (EllesmereUI, Dominos and most others), and a private form state for
   LibActionButton buttons (Bartender4, ElvUI).
-- The detected main bar is cached, so the full-screen scan for unknown bar
-  addons only runs after a loading screen or a `/dabp` change.
+- The detected main bar is cached; extra bars are scanned when configuration
+  changes or a bar list is requested. Per-bar and all-extra hotkeys are available
+  under Key Bindings → Druid Action Bar Pager.
 
 ## Form detection
 
@@ -95,5 +99,7 @@ Finds whichever main bar is actually on your screen and switches that one:
 | `/dabp travel 4` | Opt a utility form into switching |
 | `/dabp on` / `/dabp off` | Enable or disable paging |
 | `/dabp reset` | Restore the default pages |
-| `/dabp debug` | Show which bar the addon drives and what it is doing |
+| `/dabp bars` | List additional action bars |
+| `/dabp bar <n> on/off` | Select or remove an extra bar |
+| `/dabp debug` | Show which bars the addon drives and what it is doing |
 | `/dabp help` | List commands |

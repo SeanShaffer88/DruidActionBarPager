@@ -1,29 +1,22 @@
--- The only module that reads or writes DruidActionBarPagerDB (the saved
--- variables). It loads, repairs and migrates the table once the addon's
--- variables are available, and hands the table to the other modules.
+-- The only module that reads or writes DruidActionBarPagerDB. It loads,
+-- repairs and migrates the table once the addon's variables are available.
 local _, ns = ...
 local C, U = ns.Constants, ns.Util
 
 local S = {}
 ns.Settings = S
-
--- Bound by Load(). Every other module reads the same table through Get().
 local db
 
--- Version 1 switched Travel/Aquatic to pages 4/5. They are utility forms and
--- keep the normal bar, so only the old defaults are cleared.
 local function MigrateFromV1(pages)
     if pages.travel == 4 then pages.travel = 0 end
     if pages.aquatic == 5 then pages.aquatic = 0 end
 end
 
--- Moonkin/Tree moved from page 6 to page 4; only the old default is cleared.
 local function MigrateFromV2(pages)
     if pages.moonkin == 6 then pages.moonkin = 4 end
     if pages.tree == 6 then pages.tree = 4 end
 end
 
--- Invalid pages fall back to their defaults, and unknown keys are removed.
 local function RepairPages(pages)
     for form, default in pairs(C.DEFAULT_PAGES) do
         local page = tonumber(pages[form])
@@ -35,12 +28,20 @@ local function RepairPages(pages)
     end
 end
 
--- Called with each ADDON_LOADED name. Returns true once this addon's saved
--- variables have been loaded.
+local function RepairAdditionalBars(bars)
+    local repaired, seen = {}, {}
+    for _, id in ipairs(bars) do
+        if type(id) == "string" and id ~= "" and not seen[id]
+            and #repaired < C.MAX_ADDITIONAL_BARS then
+            repaired[#repaired + 1] = id
+            seen[id] = true
+        end
+    end
+    return repaired
+end
+
 function S.Load(name)
     if name ~= C.ADDON_NAME then return false end
-
-    -- Guard against a missing, corrupted or hand-edited WTF table.
     if type(DruidActionBarPagerDB) ~= "table" then DruidActionBarPagerDB = {} end
     db = DruidActionBarPagerDB
     if type(db.enabled) ~= "boolean" then db.enabled = true end
@@ -53,10 +54,11 @@ function S.Load(name)
     db.version = C.DB_VERSION
 
     RepairPages(db.pages)
+    if type(db.additionalBars) ~= "table" then db.additionalBars = {} end
+    db.additionalBars = RepairAdditionalBars(db.additionalBars)
     return true
 end
 
--- The saved settings table, or nil before Load() has run.
 function S.Get()
     return db
 end

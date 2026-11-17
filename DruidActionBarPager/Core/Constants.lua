@@ -11,6 +11,8 @@ C.DB_VERSION = 3
 -- Each action page holds 12 buttons, and pages run 1 to 10 (0 = no switch).
 C.BUTTONS_PER_PAGE = 12
 C.MAX_PAGE = 10
+C.MAX_ADDITIONAL_BARS = 3
+C.MAX_DISCOVERED_BARS = 10
 
 -- Seconds before a queued rebuild runs, and the later re-check after a
 -- loading screen (some bar addons finish building their bars a moment later).

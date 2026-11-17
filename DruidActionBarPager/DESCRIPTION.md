@@ -7,7 +7,7 @@
 Shift into Bear and your bear abilities are already on your bar. Shift into
 Cat, and your cat abilities are there instead. DruidActionBarPager switches
 your main action bar to a different page for every druid form, automatically
-— even in combat.
+— even in combat. Select up to three extra bars to mirror that page too.
 
 ## Why you'll like it
 
@@ -21,7 +21,8 @@ your main action bar to a different page for every druid form, automatically
 - **Works with your bars.** Blizzard's default bar, EllesmereUI, Bartender4,
   ElvUI and Dominos are detected automatically, and any other bar addon is
   found by scanning for the visible main bar. Bar addons with their own form
-  paging don't fight it: DruidActionBarPager reapplies its page immediately.
+  paging don't fight it: DruidActionBarPager reapplies its page immediately. Extra bars can be selected
+with `/dabp bars`; individual and all-extra hotkeys are available in Key Bindings.
 - **Set it up your way.** Every form's page can be changed in game with
   `/dabp <form> <page>`, disabled per form with page `0`, or reset to the
   defaults with `/dabp reset`. Settings save between sessions.
@@ -35,8 +36,8 @@ your main action bar to a different page for every druid form, automatically
 2. Out of combat, press **Shift + 2** and drag your bear abilities onto
    page 2. Repeat for page 3 (cat) and page 4 (moonkin), then **Shift + 1**
    back to your normal bar.
-3. Type `/dabp` to see which page each form uses, and `/dabp debug` if you
-   ever need to see which bar the addon is driving.
+3. Type `/dabp` to see which page each form uses. Use `/dabp bars` to select
+   extra bars, and `/dabp debug` to see which bars the addon is driving.
 
 Good to know: pages 3 and 4 are the same pages the optional extra bars
 display, so if you use those bars they will show your form abilities too —
