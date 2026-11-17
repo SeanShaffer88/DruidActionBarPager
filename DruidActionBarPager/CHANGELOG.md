@@ -4,6 +4,9 @@ All notable changes to DruidActionBarPager are documented here.
 
 ## [Unreleased]
 
+### Fixed
+- Avoid a needless rebuild on the first shapeshift after login, and skip the delayed full-screen rescan when a bar was already found.
+
 ## [1.1.2-patched.2] - 2026-11-17
 
 ### Added
