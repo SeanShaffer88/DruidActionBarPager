@@ -48,9 +48,10 @@ DruidActionBarPager finds whichever main bar is actually on your screen and swit
 | Bartender4 | BT4Button1–12 (bar 1) |
 | ElvUI | ElvUI_Bar1Button1–12 (bar 1) |
 | Dominos | DominosActionButton1–12 (bar 1) |
-| Other bar addons | Scans the screen for the visible buttons showing slots 1–12 |
+| Neuron | NeuronActionBar1_ActionButton1–12 (bar 1) |
+| Any other bar addon (including LibActionButton-based bars such as AzeriteUI and ConsolePort, and bars with unnamed buttons) | Scans the screen for the visible buttons showing slots 1–12 and groups them by bar |
 
-Bartender4, ElvUI and Dominos have their own stance/form paging. You don't need to turn it off: when they switch bar 1 for a form, DruidActionBarPager immediately puts your DruidActionBarPager page back. If you'd rather use their built-in paging, type `/dabp off`.
+Bartender4, ElvUI, Dominos and Neuron have their own stance/form paging. You don't need to turn it off: when they switch bar 1 for a form, DruidActionBarPager immediately puts your DruidActionBarPager page back. If you'd rather use their built-in paging, type `/dabp off`.
 
 DruidActionBarPager only switches the bar that shows page 1 (your main bar). Type `/dabp debug` to see which bar it's driving.
 
@@ -91,7 +92,8 @@ Forms are recognised by spell ID, then by spell name, then by icon, so it keeps 
 
 - **Nothing happens when I shift:** type `/dabp` and check that your forms are listed without "(not learned)". If a form shows as not learned even though you have it, please report it along with the form's name.
 - **Icons look out of date after shifting:** clicking or using the keybind still casts the correct spell; report it so the visual refresh can be adjusted for this client.
-- **After a `/reload` while shifted, the bar didn't flip:** shift out and back in. The addon waits for a form change to apply the first page after loading.
+- **After a `/reload` while shifted, the bar didn't flip:** the page is applied on the next form event after loading, which is usually right away. If it still shows the default page, shift out and back in, then type `/dabp debug`.
+- **Prowl bar:** there is no separate prowl setting. Prowl is cast in Cat Form, so put Prowl on your cat page (the page set with `/dabp cat <page>`, default 3).
 - **The wrong bar switches, or nothing visible changes:** type `/dabp debug`. The "main bar" line names the bar DruidActionBarPager is driving. If it isn't the one on your screen, report it with that output.
 - **Changed bar addon or layout:** `/reload` so DruidActionBarPager finds the new main bar.
 
