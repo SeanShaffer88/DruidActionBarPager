@@ -7,4 +7,16 @@
 ## IconTexture: Interface\AddOns\DruidActionBarPager\icon
 ## SavedVariables: DruidActionBarPagerDB
 
+Core\Constants.lua
+Core\Util.lua
+SavedVariables\Settings.lua
+Core\Forms.lua
+Core\Conditions.lua
+UI\Frames.lua
+UI\Snippets.lua
+Core\BarScan.lua
+UI\Attach.lua
+Core\Rebuild.lua
+Core\Events.lua
+UI\Commands.lua
 DruidActionBarPager.lua

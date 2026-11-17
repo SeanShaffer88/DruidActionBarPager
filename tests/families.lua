@@ -91,7 +91,7 @@ end
 
 H.setForms(FORMS, NAMES)
 H.setForm(1)
-H.load(H.loaderSrc or ADDON_SRC, { enabled = true, version = 3,
+H.load(ADDON_FILES, { enabled = true, version = 3,
     pages = { bear = 6, cat = 7, travel = 0, aquatic = 0, moonkin = 4, tree = 4 } })
 H.gameEvaluate()
 

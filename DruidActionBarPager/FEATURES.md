@@ -58,7 +58,7 @@ Finds whichever main bar is actually on your screen and switches that one:
 | Any other bar addon (including LibActionButton-based bars such as AzeriteUI and ConsolePort, and bars with unnamed buttons) | Scans the screen for the visible buttons showing slots 1–12 and groups them by bar |
 
 - No dependencies.
-- Bartender4, ElvUI, Dominos and Neuron have their own stance/form paging; it does
+- Bartender4, ElvUI and Neuron have their own stance/form paging; it does
   not need to be turned off — when they switch bar 1 for a form,
   DruidActionBarPager immediately puts its own page back.
 - Only the bar that shows page 1 (your main bar) is switched.
