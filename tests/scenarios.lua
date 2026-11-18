@@ -5,9 +5,9 @@ local function check(name, cond, detail)
 end
 
 local FORMS = {
-    { spellID = 5487, icon = "Ability_Racial_BearForm" },   -- bear
-    { spellID = 768,  icon = "Ability_Druid_CatForm" },     -- cat
-    { spellID = 24858, icon = "Spell_Nature_ForceOfNature" }, -- moonkin
+    { spellID = 5487, icon = 132276 },  -- bear
+    { spellID = 768,  icon = 132115 },  -- cat
+    { spellID = 24858, icon = 136036 }, -- moonkin
 }
 local NAMES = { [5487] = "Dire Bear Form", [768] = "Cat Form", [24858] = "Moonkin Form" }
 H.setBindingKey("DABP_TOGGLE_EXTRA1", "F9")
@@ -20,11 +20,15 @@ H.setForms(FORMS, NAMES)
 H.setForm(1)
 H.load(ADDON_FILES, { enabled = true, version = 3, pages = { bear = 6, cat = 7, travel = 0, aquatic = 0, moonkin = 4, tree = 4 } })
 local header = H.header()
-check("S1 bar hook: MainMenuBar wrapped (Blizzard page-mode buttons)", #H.wrapCalls > 0 and H.wrapCalls[1] == "MainMenuBar", table.concat(H.wrapCalls, ","))
+check("S1 bar hook: MainActionBar wrapped despite ButtonContainer parents",
+    #H.wrapCalls > 0 and H.wrapCalls[1] == "MainActionBar", table.concat(H.wrapCalls, ","))
 check("S1 registration leaves state armed for next evaluation", header.attrs["state-formpage"] == "refresh", header.attrs["state-formpage"])
 H.gameEvaluate() -- next game-driven evaluation (e.g. UPDATE_SHAPESHIFT_FORMS while still in bear)
 check("S1 page 6 applied after next shapeshift evaluation", header.attrs["fp-page"] == 6, tostring(header.attrs["fp-page"]))
-check("S1 Blizzard buttons overridden to page 6", H.buttons[1].attrs.actionpage == 6 and H.buttons[12].attrs.actionpage == 6,
+check("S1 Blizzard buttons overridden to page 6",
+    H.buttons[1].attrs.actionpage == 6 and H.buttons[12].attrs.actionpage == 6
+        and H.calculateBlizzardAction(H.buttons[1]) == 61
+        and H.calculateBlizzardAction(H.buttons[12]) == 72,
     tostring(H.buttons[1].attrs.actionpage))
 
 -- Scenario 2: shift to cat, back to bear.
@@ -42,7 +46,7 @@ H.fire("UPDATE_SHAPESHIFT_FORMS")
 check("S3 later unchanged shifts skip rebuild", H.pendingTimers() == 0, H.pendingTimers())
 
 -- Scenario 4: learning a new form does trigger a rebuild.
-local extended = { FORMS[1], FORMS[2], FORMS[3], { spellID = 1066, icon = "Ability_Druid_AquaticForm" } }
+local extended = { FORMS[1], FORMS[2], FORMS[3], { spellID = 1066, icon = 132112 } }
 H.setForms(extended, NAMES)
 H.fire("UPDATE_SHAPESHIFT_FORMS")
 check("S4 new form learned: rebuild scheduled", H.pendingTimers() == 1, H.pendingTimers())
@@ -50,10 +54,13 @@ H.runTimers()
 
 -- Scenario 5: caster form restores the normal bar.
 H.setForm(0); H.gameEvaluate()
-check("S5 caster form gives the bar back", header.attrs["fp-page"] == nil and H.buttons[1].attrs.actionpage == nil, tostring(header.attrs["fp-page"]))
+check("S5 caster form gives the bar back",
+    header.attrs["fp-page"] == nil and H.buttons[1].attrs.actionpage == nil
+        and H.calculateBlizzardAction(H.buttons[1]) == 1,
+    tostring(header.attrs["fp-page"]))
 
 -- Scenario 6: /dabp debug reports the hook.
-H.log[#H.log] = nil
+wipe(H.log)
 SlashCmdList.DRUIDACTIONBARPAGER("debug")
 local dbg = table.concat(H.log, "\n")
 check("S6 debug reports bar hooked", dbg:find("hooked into the bar's own paging: yes", 1, true) ~= nil)
@@ -100,13 +107,13 @@ check("S7 individual hotkeys bind secure toggle buttons",
 check("S7 all-bars hotkey binds secure toggle button",
     overrides["SHIFT-F12"] == "DruidActionBarPagerToggleAllExtras")
 
-H.log[#H.log] = nil
+wipe(H.log)
 SlashCmdList.DRUIDACTIONBARPAGER("bars")
 local listed = table.concat(H.log, "\n")
-check("S7 bar list finds all three extra bars",
-    listed:find("TestBar2Button", 1, true) ~= nil
-        and listed:find("TestBar3Button", 1, true) ~= nil
-        and listed:find("TestBar4Button", 1, true) ~= nil)
+check("S7 bar list finds all three extra bars with slot ranges",
+    listed:find("TestBar2Button [TestBar2, page 2 / slots 13-24]", 1, true) ~= nil
+        and listed:find("TestBar3Button [TestBar3, page 3 / slots 25-36]", 1, true) ~= nil
+        and listed:find("TestBar4Button [TestBar4, page 4 / slots 37-48]", 1, true) ~= nil)
 SlashCmdList.DRUIDACTIONBARPAGER("bar 1 on")
 SlashCmdList.DRUIDACTIONBARPAGER("bar 2 on")
 SlashCmdList.DRUIDACTIONBARPAGER("bar 3 on")

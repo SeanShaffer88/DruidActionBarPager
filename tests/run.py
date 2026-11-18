@@ -1,7 +1,8 @@
-"""Run the DruidActionBarPager logic tests against a simulated WoW API.
+"""Run the DruidActionBarPager logic tests against a simulated WoW Forever API.
 
 Requires the `lupa` package (pip install lupa). These tests exercise the addon's
-Lua logic with stubbed WoW frames; they do NOT replace testing in the game client.
+Lua logic, restricted-snippet constraints, and Bindings.xml schema with stubbed
+WoW frames; they do NOT replace testing in the game client.
 
     python3 tests/run.py
 """
@@ -26,6 +27,21 @@ EXPECTED_BINDINGS = [
     "DABP_TOGGLE_EXTRA3",
     "DABP_TOGGLE_ALL_EXTRAS",
 ]
+FAMILIES = ["blizzard", "bartender4", "azerite", "unnamed", "dominos", "neuron", "ellesmere"]
+EDGE_CASES = [
+    "restricted",
+    "multibars",
+    "reorder",
+    "override_and_wrap",
+    "showgrid_and_reload",
+    "reload_shifted_unknown",
+    "orphans_and_filtering",
+    "late_bar_and_perf",
+    "keybindings_and_guards",
+    "non_druid",
+    "forms_sv_combat",
+    "combat_login_and_misc",
+]
 
 
 def toc_entries():
@@ -38,9 +54,6 @@ def toc_entries():
 def toc_files():
     """Lua files listed in the .toc, in load order."""
     return [name for name in toc_entries() if name.endswith(".lua")]
-
-
-FAMILIES = ["blizzard", "bartender4", "azerite", "unnamed", "dominos", "neuron", "ellesmere"]
 
 
 def run(script, extra):
@@ -169,21 +182,29 @@ def check_bindings():
 def main():
     failures = 0
     total = 0
+
+    def tally(report):
+        nonlocal total, failures
+        for line in str(report).splitlines():
+            if not line.strip():
+                continue
+            total += 1
+            if not (line.startswith("PASS ") or ": PASS " in line):
+                failures += 1
+
     print("== key binding XML checks")
     for line in check_bindings():
         total += 1
         failures += line.startswith("FAIL")
     print("== reload and form-change scenarios")
-    report = run("scenarios.lua", {})
-    for line in str(report).splitlines():
-        total += 1
-        failures += line.startswith("FAIL")
+    tally(run("scenarios.lua", {}))
     print("== action bar family scenarios")
     for fam in FAMILIES:
-        report = run("families.lua", {"FAMILY": fam})
-        for line in str(report).splitlines():
-            total += 1
-            failures += line.startswith("FAIL")
+        tally(run("families.lua", {"FAMILY": fam}))
+    print("== regression and edge-case scenarios")
+    for case in EDGE_CASES:
+        tally(run("edge_cases.lua", {"CASE": case}))
+
     print(f"\n{total - failures}/{total} checks passed")
     return 1 if failures else 0
 

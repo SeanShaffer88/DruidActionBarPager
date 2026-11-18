@@ -14,8 +14,15 @@ end
 
 local function ShowStatus()
     local db = ns.Settings.Get()
+    local info = ns.Attach.Info()
+    local missingCount = info.missingExtras and #info.missingExtras or 0
     Print(db.enabled and "|cff40ff40enabled|r" or "|cffff4040disabled|r")
-    Print(("  extra bars selected: %d/%d"):format(#db.additionalBars, C.MAX_ADDITIONAL_BARS))
+    if missingCount > 0 then
+        Print(("  extra bars selected: %d/%d (%d not found; see /dabp bars or /dabp bar clear)"):format(
+            #db.additionalBars, C.MAX_ADDITIONAL_BARS, missingCount))
+    else
+        Print(("  extra bars selected: %d/%d"):format(#db.additionalBars, C.MAX_ADDITIONAL_BARS))
+    end
 
     -- The form index of each form the player has, by page key.
     local learned = {}
@@ -53,7 +60,8 @@ end
 local function ShowDebug()
     local info = ns.Attach.Info()
     Print("debug:")
-    Print(("  main bar: %s, %d/12 buttons (%s)"):format(info.name, info.count, info.modes))
+    Print(("  main bar: %s, %d/%d buttons (%s)"):format(
+        info.name, info.count, C.BUTTONS_PER_PAGE, info.modes))
     Print("  main bar detected: " .. (info.found and "yes" or "no (fallback)"))
     Print("  hooked into the bar's own paging: " .. (info.wrapped and "yes" or "no (not needed or not possible)"))
     ShowFormLines()
@@ -62,49 +70,73 @@ local function ShowDebug()
     local button = ns.BarScan.FirstCachedButton()
     if button then
         local okn, name = pcall(button.GetName, button)
-        Print(("  %s shows slot %s"):format(okn and name or "button 1", tostring(ns.BarScan.SlotOf(button))))
+        local label = (okn and type(name) == "string" and name ~= "") and name or "button 1"
+        Print(("  %s shows slot %s"):format(label, tostring(ns.BarScan.SlotOf(button))))
     end
     for _, extra in ipairs(info.extras) do
         local enabled = ns.Frames.header:GetAttribute("candidate-enabled" .. extra.candidate)
-        Print(("  extra bar %d: %s (%d/12 buttons, %s), paging %s"):format(
-            extra.slot, extra.name, extra.count, extra.visible and "visible" or "hidden",
-            enabled and "on" or "off"))
+        Print(("  extra bar %d: %s (%d/%d buttons, %s), paging %s"):format(
+            extra.slot, extra.display or extra.name, extra.count, C.BUTTONS_PER_PAGE,
+            extra.visible and "visible" or "hidden", enabled and "on" or "off"))
+    end
+    for _, missing in ipairs(info.missingExtras or {}) do
+        Print(("  extra bar %d: %s (not found; /dabp bar slot %d off or /dabp bar clear)"):format(
+            missing.slot, missing.id, missing.slot))
     end
     Print("  in combat: " .. tostring(InCombatLockdown()))
 end
 
+local function FindSelectedSlot(additionalBars, candidates, targetIndex)
+    for slot, savedId in ipairs(additionalBars) do
+        local resolvedIndex = ns.BarScan.ResolveCandidateId(candidates, savedId)
+        if resolvedIndex == targetIndex then return slot end
+    end
+end
+
 local function ShowBars()
     local db = ns.Settings.Get()
-    local candidates = ns.BarScan.FindExtras(true)
+    local candidates = ns.BarScan.FindExtras(false, db.additionalBars, true)
     Print("additional bars (showing up to " .. C.MAX_DISCOVERED_BARS
         .. "; select up to " .. C.MAX_ADDITIONAL_BARS .. "):")
     if #candidates == 0 then
         Print("  no action bars found; show the bar or check /dabp debug.")
-        return
-    end
-    for index, candidate in ipairs(candidates) do
-        local selected = false
-        for _, id in ipairs(db.additionalBars) do
-            if id == candidate.id then selected = true; break end
+    else
+        for index, candidate in ipairs(candidates) do
+            local slot = FindSelectedSlot(db.additionalBars, candidates, index)
+            local tag = slot and (" [selected #" .. slot .. "]") or ""
+            Print(("  %d. %s (%d/%d buttons, %s)%s"):format(
+                index, ns.BarScan.FormatCandidate(candidate), candidate.count,
+                C.BUTTONS_PER_PAGE, candidate.visibleCount > 0 and "visible" or "hidden", tag))
         end
-        Print(("  %d. %s (%d/12 buttons, %s)%s"):format(index, candidate.label,
-            candidate.count, candidate.visibleCount > 0 and "visible" or "hidden",
-            selected and " [selected]" or ""))
     end
-    Print("  /dabp bar <number> on|off selects a bar.")
+
+    local hasMissing = false
+    for slot, savedId in ipairs(db.additionalBars) do
+        if not ns.BarScan.ResolveCandidateId(candidates, savedId) then
+            hasMissing = true
+            Print(("  saved slot %d: %s [not found]"):format(slot, savedId))
+        end
+    end
+
+    Print("  /dabp bar <number> on|off selects a bar; /dabp bar clear removes all.")
+    if hasMissing then
+        Print("  /dabp bar slot <1-" .. C.MAX_ADDITIONAL_BARS .. "> off removes a missing saved bar.")
+    end
     Print("  Per-bar hotkeys follow selection order; one hotkey toggles all selected bars.")
 end
 
 local function ShowHelp()
     Print("commands (/dabp or /druidactionbarpager):")
-    Print("  /dabp                - show current page for each form")
-    Print("  /dabp <form> <page>  - set a page, e.g. /dabp bear 2")
-    Print("  /dabp <form> 0       - don't switch pages for that form")
-    Print("  /dabp on | off       - enable or disable paging")
-    Print("  /dabp reset          - restore default pages")
-    Print("  /dabp bars           - list additional action bars")
-    Print("  /dabp bar <n> on/off - select or remove an extra bar")
-    Print("  /dabp debug          - show which bars are being switched")
+    Print("  /dabp                 - show current page for each form")
+    Print("  /dabp <form> <page>   - set a page, e.g. /dabp bear 2")
+    Print("  /dabp <form> 0        - don't switch pages for that form")
+    Print("  /dabp on | off        - enable or disable paging")
+    Print("  /dabp reset           - restore default pages")
+    Print("  /dabp bars            - list additional action bars")
+    Print("  /dabp bar <n> on|off  - select or remove a listed extra bar")
+    Print("  /dabp bar slot <n> off - remove saved extra bar slot 1-" .. C.MAX_ADDITIONAL_BARS)
+    Print("  /dabp bar clear       - remove all selected extra bars")
+    Print("  /dabp debug           - show which bars are being switched")
     Print("  key bindings: toggle each selected extra bar or all extras")
     Print("  forms: bear, cat, travel, aquatic, moonkin, tree")
 end
@@ -125,42 +157,68 @@ local function SetFormPage(db, form, arg)
     return true
 end
 
--- Selects a discovered bar by its current list number; the saved ID stays stable.
+-- Selects/removes a discovered bar by list number, removes a saved slot by
+-- slot index, or clears all saved extra bars.
 local function SetExtraBar(db, arg)
-    local indexText, state = (arg or ""):match("^(%d+)%s+(%a+)$")
+    local trimmed = arg or ""
+    if trimmed == "clear" then
+        if #db.additionalBars == 0 then
+            Print("no extra bars are selected.")
+            return false
+        end
+        wipe(db.additionalBars)
+        Print("all extra bars cleared.")
+        return true
+    end
+
+    local slotText = trimmed:match("^slot%s+(%d+)%s+off$")
+    if slotText then
+        local slot = tonumber(slotText)
+        local removed = slot and db.additionalBars[slot]
+        if not removed then
+            Print("no saved extra bar in slot " .. tostring(slotText) .. "; see /dabp bars.")
+            return false
+        end
+        table.remove(db.additionalBars, slot)
+        Print("removed saved extra bar slot " .. slot .. " (" .. removed .. ").")
+        return true
+    end
+
+    local indexText, state = trimmed:match("^(%d+)%s+(%a+)$")
     local index = tonumber(indexText)
     if not index or (state ~= "on" and state ~= "off") then
-        Print("use /dabp bar <number> on|off; see /dabp bars.")
+        Print("use /dabp bar <number> on|off, /dabp bar slot <1-"
+            .. C.MAX_ADDITIONAL_BARS .. "> off, or /dabp bar clear.")
         return false
     end
-    local candidates = ns.BarScan.FindExtras(true)
+
+    local candidates = ns.BarScan.FindExtras(false, db.additionalBars, true)
     local candidate = candidates[index]
     if not candidate then
         Print("no bar at that number; use /dabp bars to refresh the list.")
         return false
     end
-    local selectedAt
-    for i, id in ipairs(db.additionalBars) do
-        if id == candidate.id then selectedAt = i; break end
-    end
+    local selectedAt = FindSelectedSlot(db.additionalBars, candidates, index)
     if state == "on" then
         if selectedAt then
-            Print(candidate.label .. " is already selected.")
+            Print(candidate.label .. " is already selected (slot " .. selectedAt .. ").")
             return false
         end
         if #db.additionalBars >= C.MAX_ADDITIONAL_BARS then
-            Print("select up to " .. C.MAX_ADDITIONAL_BARS .. " extra bars.")
+            Print("select up to " .. C.MAX_ADDITIONAL_BARS
+                .. " extra bars (use /dabp bar slot <n> off or /dabp bar clear to free a slot).")
             return false
         end
         table.insert(db.additionalBars, candidate.id)
-        Print(candidate.label .. " selected as extra bar " .. #db.additionalBars .. ".")
+        Print(ns.BarScan.FormatCandidate(candidate)
+            .. " selected as extra bar " .. #db.additionalBars .. ".")
     else
         if not selectedAt then
             Print(candidate.label .. " is not selected.")
             return false
         end
         table.remove(db.additionalBars, selectedAt)
-        Print(candidate.label .. " removed from extra bars.")
+        Print(ns.BarScan.FormatCandidate(candidate) .. " removed from extra bars.")
     end
     return true
 end
@@ -205,6 +263,19 @@ end
 
 local function HandleSlash(input)
     local cmd, arg = ParseInput(input)
+    if cmd == "help" then
+        ShowHelp()
+        return
+    end
+    if not U.IsDruid() then
+        Print("inactive on non-druid characters.")
+        return
+    end
+    local db = ns.Settings.Get()
+    if not db then
+        Print("settings are not loaded yet.")
+        return
+    end
 
     local view = VIEWS[cmd]
     if view then
@@ -212,7 +283,7 @@ local function HandleSlash(input)
         return
     end
 
-    if not ApplySetting(ns.Settings.Get(), cmd, arg) then return end
+    if not ApplySetting(db, cmd, arg) then return end
 
     if InCombatLockdown() then
         Print("you're in combat; the change will apply when combat ends.")

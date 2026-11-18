@@ -7,14 +7,21 @@ local S = {}
 ns.Settings = S
 local db
 
+local KNOWN_KEYS = {
+    enabled        = true,
+    version        = true,
+    pages          = true,
+    additionalBars = true,
+}
+
 local function MigrateFromV1(pages)
-    if pages.travel == 4 then pages.travel = 0 end
-    if pages.aquatic == 5 then pages.aquatic = 0 end
+    if tonumber(pages.travel) == 4 then pages.travel = 0 end
+    if tonumber(pages.aquatic) == 5 then pages.aquatic = 0 end
 end
 
 local function MigrateFromV2(pages)
-    if pages.moonkin == 6 then pages.moonkin = 4 end
-    if pages.tree == 6 then pages.tree = 4 end
+    if tonumber(pages.moonkin) == 6 then pages.moonkin = 4 end
+    if tonumber(pages.tree) == 6 then pages.tree = 4 end
 end
 
 local function RepairPages(pages)
@@ -46,7 +53,9 @@ function S.Load(name)
     db = DruidActionBarPagerDB
     if type(db.enabled) ~= "boolean" then db.enabled = true end
     if type(db.pages) ~= "table" then db.pages = {} end
-    if type(db.version) ~= "number" then db.version = nil end
+    if type(db.version) ~= "number" or db.version ~= db.version then
+        db.version = nil
+    end
 
     local version = db.version or 1
     if version < 2 then MigrateFromV1(db.pages) end
@@ -56,6 +65,10 @@ function S.Load(name)
     RepairPages(db.pages)
     if type(db.additionalBars) ~= "table" then db.additionalBars = {} end
     db.additionalBars = RepairAdditionalBars(db.additionalBars)
+
+    for key in pairs(db) do
+        if not KNOWN_KEYS[key] then db[key] = nil end
+    end
     return true
 end
 

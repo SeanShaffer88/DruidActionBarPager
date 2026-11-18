@@ -35,7 +35,7 @@ Every page can be changed in game.
 
 From then on, shifting into a form flips the bar for you.
 
-> **Note:** Pages 3 and 4 are the same pages the optional extra bars (Right Bar, Right Bar 2, Bottom Right and Bottom Left) display. If you have those bars turned on, they will show your form abilities too. Either turn those bars off, or move forms to pages you don't use with the commands below (pages 7–10 are also valid).
+> **Note:** Pages 3 and 4 are the same pages Blizzard's Right Bar and Right Bar 2 display (while Bottom Right and Bottom Left use pages 5 and 6). If you have those bars turned on and don't want them sharing slots with a form, move forms to pages you don't use with the commands below (pages 7–10 are also valid).
 
 ## Action bar addons
 
@@ -53,7 +53,7 @@ DruidActionBarPager finds whichever main bar is actually on your screen and swit
 
 Bartender4, ElvUI and Neuron have their own stance/form paging. You don't need to turn it off: when they switch bar 1 for a form, DruidActionBarPager immediately puts your DruidActionBarPager page back. If you'd rather use their built-in paging, type `/dabp off`.
 
-The main bar always pages automatically. To page extra bars too, use `/dabp bars`, then select up to three with `/dabp bar <number> on`. Selected bars mirror the same form page; remove one with `/dabp bar <number> off`. Selection saves between sessions; adding or removing a bar while shifted takes effect on the next form update.
+The main bar always pages automatically, and yields automatically whenever a vehicle, override, possess, temporary shapeshift, or skyriding bar is active. To page extra bars too (including Blizzard's optional bars on pages 3–6 and 13–15, or third-party extra bars up to slot 180), use `/dabp bars`, then select up to three with `/dabp bar <number> on`. Selected bars mirror the same form page; remove one with `/dabp bar <number> off`, remove a missing saved bar with `/dabp bar slot <1-3> off`, or clear all extra bars with `/dabp bar clear`. Selection saves between sessions; adding or removing a bar while shifted takes effect cleanly without leaving old bars stuck on a form page.
 
 Set hotkeys in **Esc → Key Bindings → Druid Action Bar Pager**. The three individual bindings follow the order you selected bars; the all-bars binding toggles every selected extra. These hotkeys temporarily pause paging for extras only; the main bar keeps paging. Type `/dabp debug` to see attached bars.
 
@@ -69,8 +69,10 @@ Set hotkeys in **Esc → Key Bindings → Druid Action Bar Pager**. The three in
 | `/dabp travel 4` | Opt a utility form into switching, if you want it |
 | `/dabp on` / `/dabp off` | Enable or disable paging |
 | `/dabp reset` | Restore the default pages |
-| `/dabp bars` | List additional action bars |
-| `/dabp bar <n> on/off` | Select or remove an extra bar (up to three) |
+| `/dabp bars` | List additional action bars (with bar names and page/slot ranges) |
+| `/dabp bar <n> on/off` | Select or remove a listed extra bar (up to three) |
+| `/dabp bar slot <n> off` | Remove saved extra bar slot 1–3 (even if that bar's addon was removed) |
+| `/dabp bar clear` | Remove all selected extra bars |
 | `/dabp debug` | Show which bars DruidActionBarPager drives and what it's doing |
 | `/dabp help` | List commands |
 
@@ -80,7 +82,7 @@ Changes made during combat are processed after combat ends. If a form page is ac
 
 1. Unzip the archive.
 2. Copy the `DruidActionBarPager` folder into your `World of Warcraft\_<client>_\Interface\AddOns\` folder.
-3. Restart the game or type `/reload`.
+3. Restart the game (required on first install so `Bindings.xml` registers in Key Bindings; `/reload` is enough when updating).
 
 ## How it works
 
