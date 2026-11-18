@@ -4,7 +4,7 @@ All notable changes to DruidActionBarPager are documented here.
 
 ## [Unreleased]
 
-## [1.1.2-patched.5] - 2026-11-18
+## [1.2.0] - 2026-11-18
 
 ### Added
 - `/dabp bar clear` and `/dabp bar slot <1-3> off` commands to remove saved extra bars even when the addon that owned them is hidden or uninstalled, plus missing-bar indicators in `/dabp`, `/dabp bars`, and `/dabp debug`.
