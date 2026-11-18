@@ -5,7 +5,7 @@
 **Docs:** [Features](FEATURES.md) · [Description](DESCRIPTION.md) · [Changelog](CHANGELOG.md)
 
 **Author:** Malikor  
-**Version:** 1.1.2-patched.5<br>
+**Version:** 1.2.0<br>
 **Game:** World of Warcraft — Forever 1.60.1 (interface 16001)  
 **License:** GNU GPL v3
 
