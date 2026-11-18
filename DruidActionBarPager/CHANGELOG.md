@@ -4,6 +4,9 @@ All notable changes to DruidActionBarPager are documented here.
 
 ## [Unreleased]
 
+### Fixed
+- Stop repeating `header="DRUIDACTIONBARPAGER"` in `Bindings.xml` and group the four extra-bar hotkeys with `category="BINDING_HEADER_DRUIDACTIONBARPAGER"`, eliminating the duplicate binding-header `LUA_WARNING` on load and placing them under **Druid Action Bar Pager** in Key Bindings.
+
 ## [1.1.2-patched.4] - 2026-11-17
 
 ### Fixed
