@@ -1,6 +1,6 @@
 -- Druid form detection. Reads the game's shapeshift API and keeps no settings.
--- Forms are matched by spell ID first, then by spell name, then by icon, so
--- detection keeps working if the client renumbers spells.
+-- Forms are matched by spell ID first, then by spell name, then by icon fileID
+-- or path, so detection keeps working across locales if spell IDs change.
 local _, ns = ...
 local C = ns.Constants
 
@@ -36,7 +36,7 @@ local function FormDetails(index)
         if spellID then
             name = GetSpellName(spellID)
             -- Spell data can arrive after login; ask for it and rebuild on
-            -- SPELL_DATA_LOAD_RESULT. Only needed when the ID isn't known.
+            -- SPELL_DATA_LOAD_RESULT when classification relies on the name.
             if not name and C_Spell and C_Spell.RequestLoadSpellData
                 and not pendingSpellData[spellID] then
                 pendingSpellData[spellID] = true
@@ -58,10 +58,14 @@ local function ClassifyForm(index)
     if name then
         local lname = name:lower()
         for _, pair in ipairs(C.NAME_MATCH) do
-            if lname:find(pair[1], 1, true) then
+            if lname:find(pair[1]) then
                 return pair[2]
             end
         end
+    end
+
+    if type(icon) == "number" and C.ICON_FILE_IDS[icon] then
+        return C.ICON_FILE_IDS[icon]
     end
 
     if type(icon) == "string" then

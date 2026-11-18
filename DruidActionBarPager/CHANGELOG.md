@@ -4,7 +4,21 @@ All notable changes to DruidActionBarPager are documented here.
 
 ## [Unreleased]
 
+### Added
+- `/dabp bar clear` and `/dabp bar slot <1-3> off` commands to remove saved extra bars even when the addon that owned them is hidden or uninstalled, plus missing-bar indicators in `/dabp`, `/dabp bars`, and `/dabp debug`.
+- Parent bar names and page/slot ranges in `/dabp bars` and `/dabp debug`, so same-prefix bars (such as Bartender4 and Dominos) are easy to tell apart.
+- Locale-independent numeric icon `fileDataID` fallback for druid form detection, and `ActionButtonUseKeyDown` support for extra-bar toggle keybindings (including 3+ bound keys per action).
+
 ### Fixed
+- Replace the inner helper in the `fp-apply` restricted snippet with a separate `fp-apply-bar` attribute invoked via `RunAttribute`, fixing WoW's `"The function keyword is not permitted"` restricted-closure error that blocked paging on shapeshift and hotkey press.
+- Page selected Blizzard optional action bars (`MultiBar*`) via `actionpage` overrides instead of ignored `action` attributes, expand discovery to slots 1–180 (covering `MultiBar5`–`MultiBar7` and high-page third-party bars), and resolve `button.bar` ahead of Forever's unprotected per-button container frames.
+- Preserve per-bar hotkey pause state and `candidate-applied` tracking across candidate reordering, keep selected bars inside the 10-bar discovery cap, and restore deselected, cleared, dropped, or replaced bars out of combat via `SecureHandlerExecute`.
+- Yield action bars automatically during `[overridebar]`, `[vehicleui]`, `[possessbar]`, `[shapeshift]`, and `[bonusbar:5]` states, restrict `OnAttributeChanged` bar hooks to actual paging attributes (reapplying only the affected bar), and remove stale duplicate wrap snippets.
+- Attach all 12 buttons of a visible known bar even when empty slots are hidden (`showgrid` off), and run `UpdateShown` on fixed-slot buttons that define it.
+- Preserve caster base slots after `/reload` while shifted (reading `action-base` on Dominos, normalizing bonus-page main-bar slots, and detecting unlisted main bars already showing an active bonus page), and preserve non-`0` default button states on standalone `LibActionButton` bars.
+- Filter Blizzard system bars (`OverrideActionBarButton`, `MultiCastActionButton`, `PossessButton`, `PetActionButton`, `StanceButton`, `ExtraActionButton`, `SpellFlyoutButton`) out of `/dabp bars`, and sort visible bars ahead of hidden bars.
+- Re-detect late-loading third-party main bars that hide or supersede the initial main bar during the 2-second post-login check, skip full-UI frame scans on rebuild when no extra bars are selected, and avoid redundant startup/post-combat work.
+- Disable mouse input on the invisible secure toggle buttons and move them off screen center, keep `/dabp` commands idle on non-druid characters and safe before `ADDON_LOADED`, use whole-word form-name matching, and clean up minor `SavedVariables` and debug-output edge cases.
 - Stop repeating `header="DRUIDACTIONBARPAGER"` in `Bindings.xml` and group the four extra-bar hotkeys with `category="BINDING_HEADER_DRUIDACTIONBARPAGER"`, eliminating the duplicate binding-header `LUA_WARNING` on load and placing them under **Druid Action Bar Pager** in Key Bindings.
 
 ## [1.1.2-patched.4] - 2026-11-17

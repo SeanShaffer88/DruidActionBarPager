@@ -23,8 +23,10 @@ what changed is in [DruidActionBarPager/CHANGELOG.md](DruidActionBarPager/CHANGE
 ## Install
 
 Extract the `DruidActionBarPager` folder into
-`World of Warcraft\_classic_beta_\Interface\AddOns\` and `/reload`,
-or install the zip from the latest release the same way.
+`World of Warcraft\_classic_beta_\Interface\AddOns\` and restart the game
+(or `/reload` when updating an already-installed copy; a full client restart
+registers new `Bindings.xml` entries), or install the zip from the latest
+release the same way.
 
 ## License
 

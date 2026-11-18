@@ -66,6 +66,8 @@ jobs:
           unzip -t "$ZIP" >/dev/null
           unzip -Z1 "$ZIP" > "$RUNNER_TEMP/addon-zip-files.txt"
           grep -Fxq 'DruidActionBarPager/DruidActionBarPager.toc' "$RUNNER_TEMP/addon-zip-files.txt"
+          grep -Fxq 'DruidActionBarPager/Bindings.xml' "$RUNNER_TEMP/addon-zip-files.txt"
+          grep -Fxq 'DruidActionBarPager/icon.tga' "$RUNNER_TEMP/addon-zip-files.txt"
           grep -Fxq 'DruidActionBarPager/Core/Constants.lua' "$RUNNER_TEMP/addon-zip-files.txt"
           sha256sum "$ZIP" > SHA256SUMS.txt
           echo "zip=$ZIP" >> "$GITHUB_OUTPUT"

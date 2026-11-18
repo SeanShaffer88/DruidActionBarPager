@@ -18,11 +18,14 @@ your main action bar to a different page for every druid form, automatically
 - **Works in combat.** A secure state driver built from `[form:N]` macro
   conditions lets the game itself do the switching, so paging works exactly
   when druids shift the most — mid-fight.
-- **Works with your bars.** Blizzard's default bar, EllesmereUI, Bartender4,
-  ElvUI and Dominos are detected automatically, and any other bar addon is
-  found by scanning for the visible main bar. Bar addons with their own form
-  paging don't fight it: DruidActionBarPager reapplies its page immediately. Extra bars can be selected
-with `/dabp bars`; individual and all-extra hotkeys are available in Key Bindings.
+- **Works with your bars.** Blizzard's default and optional bars, EllesmereUI,
+  Bartender4, ElvUI, Dominos and Neuron are detected automatically, and any
+  other bar addon (including LibActionButton-based bars and bars with unnamed
+  buttons) is found by scanning for the visible main bar. Bar addons with their
+  own form paging don't fight it: DruidActionBarPager reapplies its page
+  immediately, while yielding cleanly to vehicle and override bars. Extra bars
+  can be selected with `/dabp bars` (and cleared with `/dabp bar clear`);
+  individual and all-extra hotkeys are available in Key Bindings.
 - **Set it up your way.** Every form's page can be changed in game with
   `/dabp <form> <page>`, disabled per form with page `0`, or reset to the
   defaults with `/dabp reset`. Settings save between sessions.
@@ -32,17 +35,19 @@ with `/dabp bars`; individual and all-extra hotkeys are available in Key Binding
 ## How to use it
 
 1. Extract the `DruidActionBarPager` folder into
-   `World of Warcraft\_classic_beta_\Interface\AddOns\` and `/reload`.
+   `World of Warcraft\_classic_beta_\Interface\AddOns\` and restart the game
+   (or `/reload` when updating).
 2. Out of combat, press **Shift + 2** and drag your bear abilities onto
    page 2. Repeat for page 3 (cat) and page 4 (moonkin), then **Shift + 1**
    back to your normal bar.
 3. Type `/dabp` to see which page each form uses. Use `/dabp bars` to select
    extra bars, and `/dabp debug` to see which bars the addon is driving.
 
-Good to know: pages 3 and 4 are the same pages the optional extra bars
-display, so if you use those bars they will show your form abilities too —
-either turn them off or move forms to pages 7–10. After a `/reload` while
-shifted, shift out and back in to apply the first page.
+Good to know: pages 3 and 4 match Blizzard's Right Bar and Right Bar 2 (and
+pages 5 and 6 match Bottom Right and Bottom Left), so if you keep those bars
+visible and separate, move forms to pages you don't use (pages 7–10 are valid
+too). After a `/reload` while shifted, your form page reapplies on the next
+form update automatically.
 
 DruidActionBarPager is by Malikor, free software released under the GNU
 General Public License v3, for WoW Forever 1.60.1 (Interface 16001).

@@ -6,7 +6,16 @@ ns.Util = U
 
 -- Prints a line to the chat frame, with the addon prefix.
 function U.Print(msg)
-    DEFAULT_CHAT_FRAME:AddMessage(ns.Constants.PREFIX .. msg)
+    if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
+        DEFAULT_CHAT_FRAME:AddMessage(ns.Constants.PREFIX .. msg)
+    end
+end
+
+-- True when the logged-in character is a druid.
+function U.IsDruid()
+    if not UnitClass then return false end
+    local _, class = UnitClass("player")
+    return class == "DRUID"
 end
 
 -- True for a whole page number from 0 (no switch) to MAX_PAGE. Anything else,

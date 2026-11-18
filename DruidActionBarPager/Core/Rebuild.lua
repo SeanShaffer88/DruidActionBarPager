@@ -31,13 +31,16 @@ local function Rebuild()
         pending = true
         return
     end
+    local settings = ns.Settings.Get()
+    if not settings then return end
+
     pending = false
     local force = forceNext
     forceNext = false
 
     local count = ns.Attach.Attach(force)
     local info = ns.Attach.Info()
-    local condition = ns.Conditions.Build(ns.Settings.Get())
+    local condition = ns.Conditions.Build(settings)
     local key = condition .. "#" .. count .. "#" .. info.name .. "#" .. (info.signature or "")
     local changed = key ~= lastKey
     if not changed then
@@ -46,7 +49,7 @@ local function Rebuild()
     end
     lastKey = key
     RegisterDriver(condition)
-    ArmRefreshIfMismatch(force or changed)
+    ArmRefreshIfMismatch(true)
 end
 
 function R.Now(force)
