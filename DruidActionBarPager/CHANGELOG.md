@@ -4,6 +4,8 @@ All notable changes to DruidActionBarPager are documented here.
 
 ## [Unreleased]
 
+## [1.1.2-patched.4] - 2026-11-17
+
 ### Fixed
 - Keep saved extra-bar selections stable when discovery order changes, and migrate older IDs when they identify one bar unambiguously.
 
