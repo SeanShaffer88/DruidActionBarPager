@@ -110,17 +110,47 @@ local function ModeSummary(counts)
     return table.concat(summary, ", ")
 end
 
+local function ResolveCandidateId(candidates, id)
+    if type(id) ~= "string" then return nil end
+    for index, candidate in ipairs(candidates) do
+        if candidate.id == id then return index, candidate.id end
+    end
+
+    -- Releases before stable IDs stored label@firstSlot#discoveryOrder.
+    -- Migrate only when the label/slot pair identifies exactly one candidate.
+    local legacyBase = id:match("^(.*@%d+)#%d+$")
+    if not legacyBase then return nil end
+    local match, matches
+    for index, candidate in ipairs(candidates) do
+        if candidate.idBase == legacyBase then
+            match = index
+            matches = (matches or 0) + 1
+        end
+    end
+    if matches == 1 then return match, candidates[match].id end
+end
+
 function At.Attach(force)
     local name, list, count, found = ns.BarScan.Find(force)
     local active = header:GetAttribute("fp-active")
     local candidates = ns.BarScan.FindExtras(false)
     local db = ns.Settings.Get()
     local selectedById, candidateById = {}, {}
+    for index, candidate in ipairs(candidates) do candidateById[candidate.id] = index end
+    local normalizedBars, seenBars = {}, {}
     for slot = 1, C.MAX_ADDITIONAL_BARS do
         local id = db.additionalBars[slot]
-        if id then selectedById[id] = slot end
+        if id then
+            local _, canonicalId = ResolveCandidateId(candidates, id)
+            local normalizedId = canonicalId or id
+            if not seenBars[normalizedId] then
+                normalizedBars[#normalizedBars + 1] = normalizedId
+                seenBars[normalizedId] = true
+                selectedById[normalizedId] = #normalizedBars
+            end
+        end
     end
-    for index, candidate in ipairs(candidates) do candidateById[candidate.id] = index end
+    db.additionalBars = normalizedBars
 
     local bases, mainCounts = {}, {}
     local bar
