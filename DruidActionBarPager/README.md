@@ -6,6 +6,12 @@
 
 **Author:** Malikor  
 **Version:** 1.2.1<br>
+
+The next development version adds /dabp config, a compact native mapping panel with shared-page warnings, extra-bar selection and current paging ownership. Its buttons support Tab / Shift+Tab, Enter / Space and Escape. Find bars scans only when requested.
+
+/dabp prowl <0-10> optionally assigns Cat + Prowl a different page. Zero inherits Cat. Other forms keep their existing zero = no-switch behavior. Vehicle and game override bars retain priority. Configuration made in combat applies when combat ends.
+
+Compatibility evidence is versioned in the repository's docs/compatibility.md. Installed adapter versions remain unknown unless their metadata supplies them. New settings use schema 4, and a future schema is refused without rewriting its save.
 **Game:** World of Warcraft — Forever 1.60.1 (interface 16001)  
 **License:** GNU GPL v3
 

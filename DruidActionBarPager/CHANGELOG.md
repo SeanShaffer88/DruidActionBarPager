@@ -4,6 +4,15 @@ All notable changes to DruidActionBarPager are documented here.
 
 ## [Unreleased]
 
+### Added
+- Compact native mapping panel at /dabp config, with keyboard navigation, remembered placement, extra-bar selection, shared-page warnings and explicit paging ownership.
+- Optional Cat + Prowl page at /dabp prowl <0-10>; zero inherits Cat and game override bars keep priority.
+- Versioned compatibility evidence distinguishing named adapter contracts, generic discovery and unknown client observations.
+
+### Changed
+- Settings schema 4 preserves existing mappings and refuses future schemas before changing any saved value.
+- Canonical LF-text/stored-ZIP packaging produces identical archives across checkouts and platforms. Tag publication waits for tests, source verification and Windows parity, then verifies hosted bytes without replacing existing assets.
+
 ## [1.2.1] - 2026-11-21
 
 ### Fixed

@@ -49,6 +49,7 @@ local specialState = {
     possessbar = false,
     shapeshift = false,
     bonusbar = 0,
+    stealth = false,
 }
 local forms = {}
 local spellNames = {}
@@ -203,6 +204,7 @@ local methods = {
             return
         end
         self.attrs[k] = v
+        if self.scripts and self.scripts.OnAttributeChanged then self.scripts.OnAttributeChanged(self, k, v) end
         if type(k) == "string" and k:sub(1, 1) ~= "_" then
             local wraps = wrapHandlers[self]
             if wraps then
@@ -252,8 +254,40 @@ local methods = {
     UnregisterEvent = function(self, ev) self.events[ev] = nil end,
     UnregisterAllEvents = function(self) wipe(self.events) end,
     SetScript = function(self, script, fn)
+        self.scripts = self.scripts or {}
+        self.scripts[script] = fn
         if script == "OnEvent" then self.onevent = fn end
     end,
+    GetScript = function(self, script) return self.scripts and self.scripts[script] end,
+    HookScript = function(self, script, fn)
+        self.scripts = self.scripts or {}
+        local previous = self.scripts[script]
+        self.scripts[script] = function(...)
+            if previous then previous(...) end
+            fn(...)
+        end
+    end,
+    CreateFontString = function()
+        return {
+            SetAllPoints = function() end, SetJustifyH = function() end,
+            SetText = function(self, value) self.text = value end,
+            SetTextColor = function() end, SetWordWrap = function() end,
+        }
+    end,
+    SetText = function(self, value) self.text = value end,
+    GetWidth = function(self) return self.size and self.size[1] or 1920 end,
+    GetHeight = function(self) return self.size and self.size[2] or 1080 end,
+    SetScale = function(self, value) self.scale = value end,
+    SetClampedToScreen = function(self, value) self.clamped = value end,
+    SetMovable = function(self, value) self.movable = value end,
+    RegisterForDrag = function() end,
+    StartMoving = function(self) self.moving = true end,
+    StopMovingOrSizing = function(self) self.moving = false end,
+    GetPoint = function(self) return unpack(self.point or {}) end,
+    EnableKeyboard = function(self, value) self.keyboard = value end,
+    SetPropagateKeyboardInput = function(self, value) self.propagate = value end,
+    LockHighlight = function(self) self.highlighted = true end,
+    UnlockHighlight = function(self) self.highlighted = false end,
     IsVisible = function(self) return self.visible ~= false end,
     IsShown = function(self) return self.visible ~= false end,
     IsProtected = function(self) return self.prot, self.prot end,
@@ -278,8 +312,14 @@ local methods = {
         checkProtectedCall("RegisterForClicks")
         self.clicks = { ... }
     end,
-    Show = function(self) self.visible = true end,
-    Hide = function(self) self.visible = false end,
+    Show = function(self)
+        self.visible = true
+        if self.scripts and self.scripts.OnShow then self.scripts.OnShow(self) end
+    end,
+    Hide = function(self)
+        self.visible = false
+        if self.scripts and self.scripts.OnHide then self.scripts.OnHide(self) end
+    end,
 }
 
 local function newFrame(name, protected, frameType)
@@ -435,6 +475,7 @@ local function bracketMatches(bracket)
         local t = token:gsub("^%s+", ""):gsub("%s+$", "")
         local ok = false
         if t == "overridebar" then ok = specialState.overridebar
+        elseif t == "stealth" then ok = specialState.stealth
         elseif t == "vehicleui" then ok = specialState.vehicleui
         elseif t == "possessbar" then ok = specialState.possessbar
         elseif t == "shapeshift" then ok = specialState.shapeshift
