@@ -111,6 +111,8 @@ class PackageTests(unittest.TestCase):
         self.assertIn('sha256sum -c SHA256SUMS.txt', workflow)
         self.assertIn('cmp "dist/DruidActionBarPager-', workflow)
         self.assertIn('refs/tags/$TAG^{commit}', workflow)
+        # A colon followed by space in a plain inline run scalar is YAML mapping syntax.
+        self.assertNotRegex(workflow, r'(?m)^\s*- run: [^\n]*: ')
 
 
 if __name__ == '__main__':

@@ -284,8 +284,14 @@ local methods = {
     StartMoving = function(self) self.moving = true end,
     StopMovingOrSizing = function(self) self.moving = false end,
     GetPoint = function(self) return unpack(self.point or {}) end,
-    EnableKeyboard = function(self, value) self.keyboard = value end,
-    SetPropagateKeyboardInput = function(self, value) self.propagate = value end,
+    EnableKeyboard = function(self, value)
+        if self.prot then checkProtectedCall("EnableKeyboard") end
+        self.keyboard = value
+    end,
+    SetPropagateKeyboardInput = function(self, value)
+        checkProtectedCall("SetPropagateKeyboardInput is nocombat")
+        self.propagate = value
+    end,
     LockHighlight = function(self) self.highlighted = true end,
     UnlockHighlight = function(self) self.highlighted = false end,
     IsVisible = function(self) return self.visible ~= false end,

@@ -38,6 +38,13 @@ local function Focus(index)
 end
 
 local function KeyDown(self, key)
+    -- This panel is unprotected, so disabling its keyboard is legal in combat.
+    -- Propagation itself has a nocombat restriction and must not be called here.
+    if InCombatLockdown() then
+        Focus(0)
+        self:EnableKeyboard(false)
+        return
+    end
     if key == "TAB" then
         local step = IsShiftKeyDown and IsShiftKeyDown() and -1 or 1
         local nextFocus = focus == 0 and (step > 0 and 1 or #controls)
@@ -97,6 +104,13 @@ end
 
 function P.Refresh()
     if not panel or not panel:IsShown() then return end
+    if InCombatLockdown() then
+        Focus(0)
+        panel:EnableKeyboard(false)
+    else
+        panel:SetPropagateKeyboardInput(true)
+        panel:EnableKeyboard(true)
+    end
     local snapshot = ns.Mapping.Snapshot()
     Fit()
     panel.status:SetText(snapshot.state .. " · form " .. tostring(snapshot.form or 0))
@@ -146,8 +160,12 @@ local function Create()
         local point, _, relativePoint, x, y = self:GetPoint(1)
         ns.Settings.SaveWindow(point, relativePoint, x, y)
     end)
-    panel:SetScript("OnShow", function(self) self:EnableKeyboard(true); P.Refresh() end)
-    panel:SetScript("OnHide", function(self) Focus(0); self:EnableKeyboard(false) end)
+    panel:SetScript("OnShow", P.Refresh)
+    panel:SetScript("OnHide", function(self)
+        Focus(0)
+        self:EnableKeyboard(false)
+        if not InCombatLockdown() then self:SetPropagateKeyboardInput(true) end
+    end)
     panel:SetScript("OnKeyDown", KeyDown)
     panel:SetScript("OnSizeChanged", Fit)
     if panel.TitleText then panel.TitleText:SetText("DruidActionBarPager · Mapping") end

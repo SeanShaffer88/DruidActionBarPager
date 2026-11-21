@@ -23,3 +23,5 @@ The matching client UI snapshot is [Gethe/wow-ui-source bebcb6b](https://github.
 ## Native panel
 
 /dabp config opens the 600 × 580 native panel, clamped and scaled to the UI canvas. Tab and Shift+Tab move a highlight through its buttons, Enter or Space activates that control, and Escape closes it. Dragging saves its validated anchor and offsets. Reopening does not scan the frame tree. Find bars performs an explicit discovery pass; Next cycles candidates while retaining stable saved identities and avoiding duplicate extra selections. The panel has no idle update handler.
+
+Keyboard capture is released during combat and remains disabled when the panel is opened in combat. Mouse configuration continues using deferred changes. Keyboard navigation resumes after combat only if the panel is still open. Propagation changes are made only out of combat.

@@ -93,4 +93,28 @@ ns.Commands.Execute("off"); H.gameEvaluate()
 check("disabled ownership is explicit", ns.Mapping.Snapshot().state == "Disabled")
 ns.Commands.Execute("reset")
 check("reset also restores inherited Prowl behavior", ns.Settings.Get().prowlPage == 0)
+panel:GetScript("OnKeyDown")(panel, "TAB")
+H.setCombat(true, true); H.fire("PLAYER_REGEN_DISABLED")
+check("combat entry releases an already-open panel keyboard", not panel.keyboard)
+local captureError = not pcall(panel.SetPropagateKeyboardInput, panel, true)
+check("harness enforces native propagation nocombat contract", captureError)
+local safe = true
+for _, key in ipairs({ "TAB", "ENTER", "SPACE", "ESCAPE", "W" }) do
+    safe = pcall(panel:GetScript("OnKeyDown"), panel, key) and safe
+end
+check("stale queued navigation cannot invoke restricted API or capture gameplay input",
+    safe and not panel.keyboard)
+panel:Hide()
+ns.Commands.Execute("config")
+check("opening in combat keeps keyboard capture disabled", panel:IsShown() and not panel.keyboard)
+local cat = ns.Settings.Get().pages.cat
+ns.MappingPanel.Controls()[4]:GetScript("OnClick")(ns.MappingPanel.Controls()[4])
+check("mouse configuration still defers safely during combat",
+    ns.Rebuild.IsPending() and ns.Settings.Get().pages.cat == cat + 1)
+H.setCombat(false); H.fire("PLAYER_REGEN_ENABLED"); H.gameEvaluate()
+check("open panel keyboard recovers after combat", panel.keyboard and panel.propagate)
+H.setCombat(true, true); H.fire("PLAYER_REGEN_DISABLED"); panel:Hide()
+H.setCombat(false); H.fire("PLAYER_REGEN_ENABLED")
+check("closed panel does not recapture keys after combat", not panel.keyboard)
+ns.Commands.Execute("cat " .. cat)
 return table.concat(results, "\n")
