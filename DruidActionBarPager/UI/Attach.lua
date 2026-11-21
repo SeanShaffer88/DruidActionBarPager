@@ -276,13 +276,13 @@ function At.Attach(force)
 
         local candidateBar, candidateCounts = nil, {}
         local buttonRecords, currentButtons = {}, {}
+        local candidateActive = applied and true or false
         for i = 1, BUTTONS do
             local button = candidate.buttons[i]
             SetRef(prefix .. "button" .. i, button)
             if button then
-                local preset = not active and candidate.slots[i] or nil
                 local mode, slot, idx, labstate = AttachButton(
-                    i, button, active, prefix, false, newLabStates, preset
+                    i, button, candidateActive, prefix, false, newLabStates, nil
                 )
                 bases[button] = slot
                 currentButtons[button] = true

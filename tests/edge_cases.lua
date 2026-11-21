@@ -604,6 +604,80 @@ elseif CASE == "combat_login_and_misc" then
     check("E9 same-prefix BT4 bars show distinct BT4Bar2/BT4Bar3 and page/slot labels",
         barsOut:find("BT4Button [BT4Bar2, page 2 / slots 13-24]", 1, true) ~= nil
             and barsOut:find("BT4Button [BT4Bar3, page 3 / slots 25-36]", 1, true) ~= nil)
+elseif CASE == "paused_extra_baseline" then
+    local _, extra = makeFixedBar("AuditExtra", nil, 13)
+    local _, other = makeFixedBar("ZOtherExtra", nil, 37)
+    H.setForms(BEAR_CAT, BEAR_CAT_NAMES)
+    H.setForm(1)
+    local ns = H.load(ADDON_FILES, nil)
+    H.runTimers(); H.gameEvaluate()
+    SlashCmdList.DRUIDACTIONBARPAGER("bear 6")
+    SlashCmdList.DRUIDACTIONBARPAGER("bar 1 on")
+    SlashCmdList.DRUIDACTIONBARPAGER("bar 2 on")
+    H.gameEvaluate()
+    H.clickSecure(_G.DruidActionBarPagerToggleExtra1)
+    for i = 1, 12 do extra[i].attrs.action = 48 + i end
+    SlashCmdList.DRUIDACTIONBARPAGER("bear 7")
+    H.gameEvaluate()
+    check("paused extra adopts current normal page while other extra stays applied",
+        extra[1].attrs.action == 49 and other[1].attrs.action == 73)
+    local selectedId = DruidActionBarPagerDB.additionalBars[1]
+    H.fire("PLAYER_ENTERING_WORLD"); H.runTimers(); H.gameEvaluate()
+    check("second rebuild retains paused extra identity and selection",
+        DruidActionBarPagerDB.additionalBars[1] == selectedId
+            and ns.Attach.Info().missingSelected == false and extra[1].attrs.action == 49)
+    makeFixedBar("AAFirstExtra", nil, 109, "AuditExtra")
+    H.fire("PLAYER_ENTERING_WORLD"); H.runTimers(); H.gameEvaluate()
+    check("candidate reorder retains refreshed baseline and paused state",
+        DruidActionBarPagerDB.additionalBars[1] == selectedId and extra[1].attrs.action == 49
+            and other[1].attrs.action == 73)
+    H.clickSecure(_G.DruidActionBarPagerToggleExtra1)
+    check("resuming extra uses the current form page", extra[1].attrs.action == 73)
+    H.setForm(0); H.gameEvaluate()
+    check("caster restores the normal page chosen while extra was paused",
+        extra[1].attrs.action == 49 and extra[12].attrs.action == 60, extra[1].attrs.action)
+    H.fire("PLAYER_ENTERING_WORLD"); H.runTimers(); H.gameEvaluate()
+    check("caster rebuild retains selected bar identity after its normal page changed",
+        DruidActionBarPagerDB.additionalBars[1] == selectedId
+            and ns.Attach.Info().missingSelected == false)
+    H.setForm(1); H.gameEvaluate()
+    check("extra still pages after caster rebuild", extra[1].attrs.action == 73)
+    H.clickSecure(_G.DruidActionBarPagerToggleExtra1)
+    check("extra still restores its refreshed baseline", extra[1].attrs.action == 49)
+
+    -- A standalone LAB bar may keep its genuine restore state only on buttons.
+    for _, button in ipairs(extra) do
+        button.attrs.UpdateState = [[
+            local state = ...
+            self:SetAttribute("state", state)
+            self:SetAttribute("action", self:GetAttribute("labaction-" .. state))
+        ]]
+        button.state_types = {}
+        button.UpdateAction = function(self) self._state_action = self.attrs.action end
+        button.ButtonContentsChanged = button.UpdateAction
+    end
+    local function setNormalLabState(state, offset)
+        for i, button in ipairs(extra) do
+            button.attrs.state = state
+            button.attrs["labaction-" .. state] = offset + i
+            button.attrs.action = offset + i
+            button._state_type = "action"
+            button._state_action = offset + i
+        end
+    end
+    setNormalLabState("normal", 48)
+    H.fire("PLAYER_ENTERING_WORLD"); H.runTimers(); H.gameEvaluate()
+    H.clickSecure(_G.DruidActionBarPagerToggleExtra1)
+    H.clickSecure(_G.DruidActionBarPagerToggleExtra1)
+    setNormalLabState("updated", 84)
+    SlashCmdList.DRUIDACTIONBARPAGER("bear 9")
+    H.gameEvaluate()
+    H.fire("PLAYER_ENTERING_WORLD"); H.runTimers(); H.gameEvaluate()
+    H.clickSecure(_G.DruidActionBarPagerToggleExtra1)
+    check("standalone LAB extra resumes after paused state change", extra[1].attrs.action == 97)
+    H.setForm(0); H.gameEvaluate()
+    check("standalone LAB extra restores refreshed nonzero state and slots",
+        extra[1].attrs.state == "updated" and extra[1].attrs.action == 85)
 else
     error("unknown edge case: " .. tostring(CASE))
 end

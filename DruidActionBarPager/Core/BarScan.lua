@@ -8,6 +8,7 @@ ns.BarScan = B
 local BUTTONS = C.BUTTONS_PER_PAGE
 local MAX_SLOT = C.MAX_SCAN_SLOT
 local baseSlots = {}
+local discoverySlots = {}
 local cachedName, cachedList, cachedCount, cachedFound, cachedAssumedBase
 
 local function ReadField(frame, key)
@@ -128,7 +129,7 @@ local function ScanCheck(frame, active, includeHidden)
     local group = GroupFor(frame)
     if not group then return nil end
 
-    local slot = active and baseSlots[frame] or nil
+    local slot = includeHidden and discoverySlots[frame] or (active and baseSlots[frame])
     if not slot then slot = SlotOf(frame, true) end
     if not slot then return nil end
 
@@ -409,6 +410,13 @@ end
 
 function B.SetBaseSlots(slots)
     baseSlots = slots or {}
+    -- Keep an attached bar's discovery ID stable when its normal page changes.
+    -- Restore baselines can change while an extra is paused; grouping cannot.
+    local previous = discoverySlots
+    discoverySlots = {}
+    for button, slot in pairs(baseSlots) do
+        discoverySlots[button] = previous[button] or slot
+    end
 end
 
 function B.BaseSlot(button, active)
