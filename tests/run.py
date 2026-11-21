@@ -41,6 +41,7 @@ EDGE_CASES = [
     "non_druid",
     "forms_sv_combat",
     "combat_login_and_misc",
+    "paused_extra_baseline",
 ]
 
 
