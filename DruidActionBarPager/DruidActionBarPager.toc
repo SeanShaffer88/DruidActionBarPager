@@ -16,8 +16,11 @@ UI\Frames.lua
 UI\Snippets.lua
 Core\BarScan.lua
 UI\Attach.lua
+Core\Compatibility.lua
+Core\Mapping.lua
 UI\KeyBindings.lua
 Core\Rebuild.lua
 Core\Events.lua
 UI\Commands.lua
+UI\MappingPanel.lua
 DruidActionBarPager.lua

@@ -42,6 +42,8 @@ EDGE_CASES = [
     "forms_sv_combat",
     "combat_login_and_misc",
     "paused_extra_baseline",
+    "future_schema",
+    "reload_prowl",
 ]
 
 
@@ -199,6 +201,7 @@ def main():
         failures += line.startswith("FAIL")
     print("== reload and form-change scenarios")
     tally(run("scenarios.lua", {}))
+    tally(run("recommendations.lua", {}))
     print("== action bar family scenarios")
     for fam in FAMILIES:
         tally(run("families.lua", {"FAMILY": fam}))

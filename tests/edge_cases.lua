@@ -488,7 +488,7 @@ elseif CASE == "forms_sv_combat" then
     })
     local db = DruidActionBarPagerDB
     check("E14 corrupted v1 SavedVariables repaired and migrated cleanly",
-        db.version == 3 and db.enabled == true and db.staleTopLevel == nil
+        db.version == 4 and db.enabled == true and db.staleTopLevel == nil
             and db.pages.bear == 2 and db.pages.cat == 3
             and db.pages.travel == 0 and db.pages.aquatic == 0
             and db.pages.moonkin == 4 and db.pages.tree == 8
@@ -678,6 +678,26 @@ elseif CASE == "paused_extra_baseline" then
     H.setForm(0); H.gameEvaluate()
     check("standalone LAB extra restores refreshed nonzero state and slots",
         extra[1].attrs.state == "updated" and extra[1].attrs.action == 85)
+elseif CASE == "reload_prowl" then
+    H.setForms(BEAR_CAT, BEAR_CAT_NAMES)
+    H.setForm(2); H.setSpecialState("stealth", true)
+    local ns = H.load(ADDON_FILES, { version = 4, enabled = true, prowlPage = 8, pages = { cat = 3 } })
+    H.runTimers(); H.gameEvaluate()
+    check("reload already prowling applies optional page securely", H.buttons[1].attrs.actionpage == 8)
+    H.setSpecialState("stealth", false); H.gameEvaluate()
+    check("reload Prowl exit restores preserved Cat mapping", H.buttons[1].attrs.actionpage == 3)
+    check("malformed page writer refuses NaN", not ns.Settings.SetPage("prowl", 0/0))
+elseif CASE == "future_schema" then
+    local future = { version = 999, enabled = false, pages = { cat = 10 },
+        additionalBars = { "future-id" }, futureValue = { keep = true } }
+    local originalPages, originalExtras, originalFuture = future.pages, future.additionalBars, future.futureValue
+    local ns = H.load(ADDON_FILES, future)
+    check("future settings are refused without assigning a live DB", ns.Settings.Get() == nil)
+    check("future settings retain original identity and every field", DruidActionBarPagerDB == future
+        and future.version == 999 and future.enabled == false and future.pages == originalPages
+        and future.additionalBars == originalExtras and future.futureValue == originalFuture
+        and future.prowlPage == nil and future.mappingWindow == nil)
+    check("future settings cannot install a paging driver", H.header().attrs["_driver-formpage"] == nil)
 else
     error("unknown edge case: " .. tostring(CASE))
 end

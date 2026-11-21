@@ -16,6 +16,7 @@ local function OnPlayerLogin(self)
         self:UnregisterAllEvents()
         return
     end
+    if not ns.Settings.Get() then self:UnregisterAllEvents(); return end
     self:UnregisterEvent("PLAYER_LOGIN")
     self:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
     self:RegisterEvent("SPELLS_CHANGED")
@@ -24,6 +25,10 @@ local function OnPlayerLogin(self)
     self:RegisterEvent("SPELL_DATA_LOAD_RESULT")
     self:RegisterEvent("UPDATE_BINDINGS")
     self:RegisterEvent("CVAR_UPDATE")
+    self:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
+    self:RegisterEvent("UPDATE_STEALTH")
+    self:RegisterEvent("PLAYER_REGEN_DISABLED")
+    self:RegisterEvent("ACTIONBAR_PAGE_CHANGED")
     lastFormSignature = ns.Forms.Signature()
     ns.Rebuild.Now(true)
     builtOnLogin = true
@@ -86,11 +91,16 @@ local handlers = {
     PLAYER_ENTERING_WORLD = OnEnteringWorld,
     UPDATE_BINDINGS = OnBindingsUpdated,
     CVAR_UPDATE = OnCVarUpdated,
+    UPDATE_SHAPESHIFT_FORM = function() end,
+    UPDATE_STEALTH = function() end,
+    PLAYER_REGEN_DISABLED = function() end,
+    ACTIONBAR_PAGE_CHANGED = function() end,
 }
 
 local function OnEvent(self, event, arg1, arg2)
     local handler = handlers[event]
     if handler then handler(self, arg1, arg2) else OnFormListEvent() end
+    if ns.MappingPanel then ns.MappingPanel.Refresh() end
 end
 
 function E.Install()

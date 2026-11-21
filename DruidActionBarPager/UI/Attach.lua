@@ -188,6 +188,7 @@ local function SnapshotCandidates()
 end
 
 function At.Attach(force)
+    if ns.Compatibility then ns.Compatibility.Invalidate() end
     local name, list, count, found, assumedMainBase = ns.BarScan.Find(force)
     local active = header:GetAttribute("fp-active") and true or false
     local shifted = GetShapeshiftForm and (tonumber(GetShapeshiftForm()) or 0) > 0

@@ -6,7 +6,7 @@ ns.Constants = C
 
 C.ADDON_NAME = ADDON_NAME
 C.PREFIX = "|cffff7d0aDruidActionBarPager|r: "
-C.DB_VERSION = 3
+C.DB_VERSION = 4
 
 -- Each action page holds 12 buttons; configurable form pages run 1 to 10
 -- (0 = no switch), while action-bar discovery covers slots 1 to 180 (pages 1-15,

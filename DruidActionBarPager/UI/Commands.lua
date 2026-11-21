@@ -60,6 +60,13 @@ end
 local function ShowDebug()
     local info = ns.Attach.Info()
     Print("debug:")
+    local snapshot = ns.Mapping.Snapshot()
+    local compatibility = snapshot.compatibility
+    Print("  ownership: " .. snapshot.state)
+    if compatibility then
+        Print("  compatibility matrix " .. compatibility.matrix .. ": " .. compatibility.adapter
+            .. ", version " .. compatibility.version .. ", " .. compatibility.evidence)
+    end
     Print(("  main bar: %s, %d/%d buttons (%s)"):format(
         info.name, info.count, C.BUTTONS_PER_PAGE, info.modes))
     Print("  main bar detected: " .. (info.found and "yes" or "no (fallback)"))
@@ -137,18 +144,24 @@ local function ShowHelp()
     Print("  /dabp bar slot <n> off - remove saved extra bar slot 1-" .. C.MAX_ADDITIONAL_BARS)
     Print("  /dabp bar clear       - remove all selected extra bars")
     Print("  /dabp debug           - show which bars are being switched")
+    Print("  /dabp config          - edit form pages and selected extras")
+    Print("  /dabp prowl <0-10>    - Cat + Prowl page (0 inherits Cat)")
     Print("  key bindings: toggle each selected extra bar or all extras")
     Print("  forms: bear, cat, travel, aquatic, moonkin, tree")
 end
 
 -- Sets one form's page. Returns true if the setting changed.
-local function SetFormPage(db, form, arg)
+local function SetFormPage(form, arg)
     local page = tonumber(arg)
     if not U.IsValidPage(page) then
         Print(("page must be a whole number from 1 to %d (or 0 for no switch)."):format(C.MAX_PAGE))
         return false
     end
-    db.pages[form] = page
+    if not ns.Settings.SetPage(form, page) then return false end
+    if form == "prowl" then
+        Print(page == 0 and "Prowl inherits the Cat page." or ("Cat + Prowl -> action bar page " .. page .. "."))
+        return true
+    end
     if page == 0 then
         Print(C.FORM_LABELS[form] .. " will no longer switch pages.")
     else
@@ -166,7 +179,7 @@ local function SetExtraBar(db, arg)
             Print("no extra bars are selected.")
             return false
         end
-        wipe(db.additionalBars)
+        while #db.additionalBars > 0 do ns.Settings.SetExtra(#db.additionalBars, nil) end
         Print("all extra bars cleared.")
         return true
     end
@@ -179,7 +192,7 @@ local function SetExtraBar(db, arg)
             Print("no saved extra bar in slot " .. tostring(slotText) .. "; see /dabp bars.")
             return false
         end
-        table.remove(db.additionalBars, slot)
+        ns.Settings.SetExtra(slot, nil)
         Print("removed saved extra bar slot " .. slot .. " (" .. removed .. ").")
         return true
     end
@@ -209,7 +222,7 @@ local function SetExtraBar(db, arg)
                 .. " extra bars (use /dabp bar slot <n> off or /dabp bar clear to free a slot).")
             return false
         end
-        table.insert(db.additionalBars, candidate.id)
+        ns.Settings.SetExtra(#db.additionalBars + 1, candidate.id)
         Print(ns.BarScan.FormatCandidate(candidate)
             .. " selected as extra bar " .. #db.additionalBars .. ".")
     else
@@ -217,7 +230,7 @@ local function SetExtraBar(db, arg)
             Print(candidate.label .. " is not selected.")
             return false
         end
-        table.remove(db.additionalBars, selectedAt)
+        ns.Settings.SetExtra(selectedAt, nil)
         Print(ns.BarScan.FormatCandidate(candidate) .. " removed from extra bars.")
     end
     return true
@@ -233,12 +246,13 @@ local function ApplySetting(db, cmd, arg)
     end
     if cmd == "reset" then
         for form, page in pairs(C.DEFAULT_PAGES) do db.pages[form] = page end
+        ns.Settings.SetPage("prowl", 0)
         Print("pages reset to defaults.")
         return true
     end
     if cmd == "bar" then return SetExtraBar(db, arg) end
-    if C.DEFAULT_PAGES[cmd] then
-        return SetFormPage(db, cmd, arg)
+    if cmd == "prowl" or C.DEFAULT_PAGES[cmd] then
+        return SetFormPage(cmd, arg)
     end
     ShowHelp()
     return false
@@ -252,6 +266,8 @@ local VIEWS = {
     debug    = ShowDebug,
     bars     = ShowBars,
     help     = ShowHelp,
+    config   = function() ns.MappingPanel.Toggle() end,
+    settings = function() ns.MappingPanel.Toggle() end,
 }
 
 -- Splits the input into a lowercase command and its argument.
@@ -289,6 +305,24 @@ local function HandleSlash(input)
         Print("you're in combat; the change will apply when combat ends.")
     end
     ns.Rebuild.Now(true)
+    if ns.MappingPanel then ns.MappingPanel.Refresh() end
+end
+
+Cmd.Execute = HandleSlash
+
+function Cmd.SelectExtra(slot, id)
+    if not U.IsDruid() or not ns.Settings.Get() then return false end
+    if id then
+        -- An explicit selection refreshes discovery and validates its identity.
+        local candidates = ns.BarScan.FindExtras(false, ns.Settings.Get().additionalBars, true)
+        local index = ns.BarScan.ResolveCandidateId(candidates, id)
+        if not index then return false end
+        id = candidates[index].id
+    end
+    if not ns.Settings.SetExtra(slot, id) then return false end
+    ns.Rebuild.Now(true)
+    if ns.MappingPanel then ns.MappingPanel.Refresh() end
+    return true
 end
 
 -- Registers the slash commands. Called once when the addon starts.
