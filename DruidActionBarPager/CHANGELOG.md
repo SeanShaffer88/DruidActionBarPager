@@ -4,6 +4,11 @@ All notable changes to DruidActionBarPager are documented here.
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-11-21
+
+### Fixed
+- Restore the normal page selected while an extra bar was paused, including standalone LibActionButton states. Saved extra-bar selections and pause state stay stable through repeated rebuilds and candidate reordering.
+
 ## [1.2.0] - 2026-11-18
 
 ### Added
