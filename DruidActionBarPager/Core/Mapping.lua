@@ -39,7 +39,9 @@ function M.Snapshot()
     for _, row in ipairs(rows) do
         if row.page > 0 then
             if pages[row.page] then
-                warnings[#warnings + 1] = row.name .. " shares page " .. row.page .. " with " .. pages[row.page] .. "."
+                warnings[#warnings + 1] = row.name .. " shares page " .. row.page .. " (slots "
+                    .. ((row.page - 1) * C.BUTTONS_PER_PAGE + 1) .. "-" .. (row.page * C.BUTTONS_PER_PAGE)
+                    .. ") with " .. pages[row.page] .. "."
             else pages[row.page] = row.name end
         end
     end
@@ -67,7 +69,8 @@ function M.Snapshot()
         if button and button.IsVisible then ok, visible = pcall(button.IsVisible, button) end
         if ok and visible and pages[entry[2]] then
             warnings[#warnings + 1] = pages[entry[2]] .. " uses page " .. entry[2]
-                .. ", also displayed by " .. entry[1]:gsub("Button1$", "") .. "."
+                .. " (slots " .. ((entry[2] - 1) * C.BUTTONS_PER_PAGE + 1) .. "-" .. (entry[2] * C.BUTTONS_PER_PAGE)
+                .. "), also displayed by " .. entry[1]:gsub("Button1$", "") .. "."
         end
     end
     local desired = Parse(ns.Conditions.Build(db))
