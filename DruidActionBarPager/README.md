@@ -5,9 +5,9 @@
 **Docs:** [Features](FEATURES.md) · [Description](DESCRIPTION.md) · [Changelog](CHANGELOG.md)
 
 **Author:** Malikor  
-**Version:** 1.2.1<br>
+**Version:** 1.3.0<br>
 
-The next development version adds /dabp config, a compact native mapping panel with shared-page warnings, extra-bar selection and current paging ownership. Its buttons support Tab / Shift+Tab, Enter / Space and Escape. Find bars scans only when requested.
+Version 1.3.0 includes /dabp config, a compact native mapping panel with shared-page warnings, extra-bar selection and current paging ownership. Its buttons support Tab / Shift+Tab, Enter / Space and Escape. Find bars scans only when requested.
 
 /dabp prowl <0-10> optionally assigns Cat + Prowl a different page. Zero inherits Cat. Other forms keep their existing zero = no-switch behavior. Vehicle and game override bars retain priority. Configuration made in combat applies when combat ends.
 

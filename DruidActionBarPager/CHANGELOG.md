@@ -2,7 +2,7 @@
 
 All notable changes to DruidActionBarPager are documented here.
 
-## [Unreleased]
+## [1.3.0] - 2026-11-21
 
 ### Added
 - Open `/dabp config` to see which page each form uses, choose extra bars, and review shared-page warnings. Move through its buttons with the keyboard and keep its position between sessions.

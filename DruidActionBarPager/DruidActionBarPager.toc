@@ -2,7 +2,7 @@
 ## Title: |cffff7d0aDruidActionBarPager|r
 ## Notes: Switches the main and selected extra bars to druid form pages.
 ## Author: Malikor
-## Version: 1.2.1
+## Version: 1.3.0
 ## License: GPLv3
 ## IconTexture: Interface\AddOns\DruidActionBarPager\icon
 ## SavedVariables: DruidActionBarPagerDB

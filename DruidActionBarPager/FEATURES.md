@@ -1,6 +1,6 @@
 # DruidActionBarPager — Features
 
-The full feature list for DruidActionBarPager 1.2.1 for WoW Forever
+The full feature list for DruidActionBarPager 1.3.0 for WoW Forever
 (Interface 16001, game version 1.60.1). For the short version see `README.md`;
 for store-listing copy see `DESCRIPTION.md`.
 
