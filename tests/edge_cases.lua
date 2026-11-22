@@ -488,7 +488,7 @@ elseif CASE == "forms_sv_combat" then
     })
     local db = DruidActionBarPagerDB
     check("E14 corrupted v1 SavedVariables repaired and migrated cleanly",
-        db.version == 4 and db.enabled == true and db.staleTopLevel == nil
+        db.version == 5 and db.enabled == true and db.staleTopLevel == nil
             and db.pages.bear == 2 and db.pages.cat == 3
             and db.pages.travel == 0 and db.pages.aquatic == 0
             and db.pages.moonkin == 4 and db.pages.tree == 8

@@ -105,10 +105,19 @@ Finds whichever main bar is actually on your screen and switches that one:
 | `/dabp cat 0` | Don't switch pages for that form |
 | `/dabp travel 4` | Opt a utility form into switching |
 | `/dabp on` / `/dabp off` | Enable or disable paging |
-| `/dabp reset` | Restore the default pages |
+| `/dabp reset` | Review default pages before applying |
 | `/dabp bars` | List additional action bars |
 | `/dabp bar <n> on/off` | Select or remove a listed extra bar |
 | `/dabp bar slot <n> off` | Remove saved extra bar slot 1–3 |
 | `/dabp bar clear` | Remove all selected extra bars |
 | `/dabp debug` | Show which bars the addon drives and what it is doing |
 | `/dabp help` | List commands |
+
+## Mapping Reviews And Profiles
+
+- Twelve nonsecure preview icons with stored-slot numbers, action kind, empty and unknown states.
+- One owned native workflow child with keyboard navigation and native paste/copy fields.
+- Confirmed Reset and bounded session Undo for mapping changes only.
+- Four independently saved profiles per character; explicit current spec-group bindings when supported.
+- Strict mapping-only import/export and local copyable support diagnostics.
+- Combat/death guards and stale-review rejection preserve the active settings context.

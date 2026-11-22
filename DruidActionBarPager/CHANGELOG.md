@@ -5,13 +5,18 @@ All notable changes to DruidActionBarPager are documented here.
 ## [Unreleased]
 
 ### Added
-- Compact native mapping panel at /dabp config, with keyboard navigation, remembered placement, extra-bar selection, shared-page warnings and explicit paging ownership.
-- Optional Cat + Prowl page at /dabp prowl <0-10>; zero inherits Cat and game override bars keep priority.
-- Versioned compatibility evidence distinguishing named adapter contracts, generic discovery and unknown client observations.
+- Open `/dabp config` to see which page each form uses, choose extra bars, and review shared-page warnings. Move through its buttons with the keyboard and keep its position between sessions.
+- Preview the twelve buttons on a page before assigning it to a form. Empty slots and slots the addon cannot read are shown separately.
+- Review Undo or Reset before changing pages. Undo keeps up to ten mapping edits until you reload or change character or profile.
+- Keep four separate Tank, Cat, Balance and Healing setups for each character. Choose them yourself, or explicitly link a setup to the current talent setup when your client supports automatic changes.
+- Share only form page numbers, without extra bar IDs or player details. Review pasted pages before applying them.
+- Copy a local troubleshooting report without character names or player IDs.
+- Give Cat + Prowl its own page with `/dabp prowl <0-10>`. Zero keeps Cat's page, and the game's special bars keep priority.
+- See which bar addons have been checked and when the installed version is unknown.
 
 ### Changed
-- Settings schema 4 preserves existing mappings and refuses future schemas before changing any saved value.
-- Canonical LF-text/stored-ZIP packaging produces identical archives across checkouts and platforms. Tag publication waits for tests, source verification and Windows parity, then verifies hosted bytes without replacing existing assets.
+- Existing page choices are kept when settings are upgraded. Saves from a newer addon are left untouched.
+- Windows and Linux produce identical ZIPs. Published downloads are checked against the verified package.
 
 ## [1.2.1] - 2026-11-21
 

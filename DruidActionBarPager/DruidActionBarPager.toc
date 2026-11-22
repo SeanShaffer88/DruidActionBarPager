@@ -21,6 +21,11 @@ Core\Mapping.lua
 UI\KeyBindings.lua
 Core\Rebuild.lua
 Core\Events.lua
+Core\Actions.lua
+Core\Profiles.lua
+Core\Sharing.lua
+Core\Support.lua
 UI\Commands.lua
 UI\MappingPanel.lua
+UI\Workflow.lua
 DruidActionBarPager.lua

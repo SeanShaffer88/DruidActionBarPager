@@ -27,7 +27,7 @@ your main action bar to a different page for every druid form, automatically
   can be selected with `/dabp bars` (and cleared with `/dabp bar clear`);
   individual and all-extra hotkeys are available in Key Bindings.
 - **Set it up your way.** Every form's page can be changed in game with
-  `/dabp <form> <page>`, disabled per form with page `0`, or reset to the
+  `/dabp <form> <page>`, disabled per form with page `0`, or reviewed against the
   defaults with `/dabp reset`. Settings save between sessions.
 - **No dependencies, nothing to configure to start.** Install it, put your
   bear abilities on page 2, cat on page 3 and moonkin on page 4, and shift.

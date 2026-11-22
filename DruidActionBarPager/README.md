@@ -11,7 +11,7 @@ The next development version adds /dabp config, a compact native mapping panel w
 
 /dabp prowl <0-10> optionally assigns Cat + Prowl a different page. Zero inherits Cat. Other forms keep their existing zero = no-switch behavior. Vehicle and game override bars retain priority. Configuration made in combat applies when combat ends.
 
-Compatibility evidence is versioned in the repository's docs/compatibility.md. Installed adapter versions remain unknown unless their metadata supplies them. New settings use schema 4, and a future schema is refused without rewriting its save.
+Compatibility evidence is versioned in the repository's docs/compatibility.md. Installed adapter versions remain unknown unless their metadata supplies them. New settings use schema 5, and a future schema is refused without rewriting its save.
 **Game:** World of Warcraft — Forever 1.60.1 (interface 16001)  
 **License:** GNU GPL v3
 
@@ -74,7 +74,7 @@ Set hotkeys in **Esc → Key Bindings → Druid Action Bar Pager**. The three in
 | `/dabp cat 0` | Don't switch pages for that form |
 | `/dabp travel 4` | Opt a utility form into switching, if you want it |
 | `/dabp on` / `/dabp off` | Enable or disable paging |
-| `/dabp reset` | Restore the default pages |
+| `/dabp reset` | Review default pages before applying |
 | `/dabp bars` | List additional action bars (with bar names and page/slot ranges) |
 | `/dabp bar <n> on/off` | Select or remove a listed extra bar (up to three) |
 | `/dabp bar slot <n> off` | Remove saved extra bar slot 1–3 (even if that bar's addon was removed) |
@@ -113,3 +113,29 @@ Forms are recognised by spell ID, then by spell name, then by icon, so it keeps 
 ## License
 
 DruidActionBarPager is free software released under the GNU General Public License v3. See `LICENSE` for the full text.
+
+## Reviewed Mapping Workflows
+
+Open `/dabp config` and choose Preview, Profiles, Share, Undo, Reset or Support.
+The workflow opens above Mapping. Tab and Shift+Tab move between buttons;
+Enter or Space activates the focused button, and Escape closes the view.
+Paste and report fields keep native text selection: use Ctrl+A and Ctrl+C.
+Tab leaves the text field and focuses Review import. Cancel, X and Escape
+leave the mapping unchanged.
+
+- `/dabp preview cat 8` shows the twelve stored slots for page 8 before assignment.
+  Page 0 means No switch; Prowl 0 inherits Cat. Unknown slots are distinct from empty slots.
+- `/dabp undo` reviews the last mapping edit. `/dabp reset` reviews the default
+  form pages. Apply confirms the change; extra bars, enabled state and window placement stay unchanged.
+- `/dabp profiles` opens Tank, Cat, Balance and Healing setups for the current
+  character. Each starts with the original mapping. Choose a profile and review
+  it before applying. Bind current spec-group explicitly enables automatic
+  switching for that readable group; missing client APIs leave manual profiles available.
+- `/dabp share` copies only seven form page numbers. Paste a mapping there or use
+  `/dabp import DABP1;bear=2;cat=3;travel=0;aquatic=0;moonkin=4;tree=4;prowl=0`
+  to review it. Player identity, extra bar IDs, actions and profile bindings are excluded.
+- `/dabp support` opens a bounded local technical report for manual copying.
+
+Reviewed applies wait for you to leave combat and return to life. Existing
+explicit page commands such as `/dabp cat 3` still update the desired mapping
+immediately and defer protected paging until combat ends.

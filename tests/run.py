@@ -202,6 +202,8 @@ def main():
     print("== reload and form-change scenarios")
     tally(run("scenarios.lua", {}))
     tally(run("recommendations.lua", {}))
+    tally(run("five_domain.lua", {}))
+    tally(run("five_ui.lua", {}))
     print("== action bar family scenarios")
     for fam in FAMILIES:
         tally(run("families.lua", {"FAMILY": fam}))

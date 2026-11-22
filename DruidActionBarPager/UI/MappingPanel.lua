@@ -40,11 +40,12 @@ end
 local function KeyDown(self, key)
     -- This panel is unprotected, so disabling its keyboard is legal in combat.
     -- Propagation itself has a nocombat restriction and must not be called here.
-    if InCombatLockdown() then
+    if InCombatLockdown() or (ns.Workflow and ns.Workflow.Blocked()) then
         Focus(0)
         self:EnableKeyboard(false)
         return
     end
+    if ns.Workflow and ns.Workflow.IsOpen() then self:EnableKeyboard(false); return end
     if key == "TAB" then
         local step = IsShiftKeyDown and IsShiftKeyDown() and -1 or 1
         local nextFocus = focus == 0 and (step > 0 and 1 or #controls)
@@ -74,7 +75,7 @@ end
 
 local function Fit()
     if not panel or not UIParent.GetWidth or not UIParent.GetHeight then return end
-    local scale = math.min(1, UIParent:GetWidth() / 640, UIParent:GetHeight() / 620)
+    local scale = math.min(1, UIParent:GetWidth() / 640, UIParent:GetHeight() / 680)
     panel:SetScale(math.max(0.3, scale))
 end
 
@@ -104,14 +105,21 @@ end
 
 function P.Refresh()
     if not panel or not panel:IsShown() then return end
-    if InCombatLockdown() then
+    if InCombatLockdown() or (ns.Workflow and ns.Workflow.Blocked()) then
         Focus(0)
         panel:EnableKeyboard(false)
+    elseif ns.Workflow and ns.Workflow.IsOpen() then
+        Focus(0); panel:EnableKeyboard(false)
     else
         panel:SetPropagateKeyboardInput(true)
         panel:EnableKeyboard(true)
     end
     local snapshot = ns.Mapping.Snapshot()
+    if panel.profile and ns.Profiles then
+        local status = ns.Profiles.Status()
+        panel.profile:SetText("Active profile: " .. tostring(status.active or "unavailable")
+            .. (status.specAvailable and " · Spec-group API available" or " · Automatic switching unavailable"))
+    end
     Fit()
     panel.status:SetText(snapshot.state .. " · form " .. tostring(snapshot.form or 0))
     panel.owner:SetText("Main bar: " .. tostring(snapshot.owner or "unavailable")
@@ -147,7 +155,7 @@ end
 
 local function Create()
     panel = CreateFrame("Frame", "DruidActionBarPagerMapping", UIParent, "BasicFrameTemplateWithInset")
-    panel:SetSize(600, 580)
+    panel:SetSize(600, 640)
     local window = ns.Settings.Get().mappingWindow
     panel:SetPoint(window.point, UIParent, window.relativePoint, window.x, window.y)
     panel:SetClampedToScreen(true)
@@ -162,6 +170,7 @@ local function Create()
     end)
     panel:SetScript("OnShow", P.Refresh)
     panel:SetScript("OnHide", function(self)
+        if ns.Workflow then ns.Workflow.Close() end
         Focus(0)
         self:EnableKeyboard(false)
         if not InCombatLockdown() then self:SetPropagateKeyboardInput(true) end
@@ -199,11 +208,18 @@ local function Create()
     panel.warning = Text(panel, 12, 18, -463, 560)
     panel.warning:SetTextColor(1, 0.82, 0)
     panel.evidence = Text(panel, 12, 18, -488, 560)
-    panel.enabled = Button(panel, "Disable paging", 18, -530, 140, function()
+    local views = { {"Preview", "Preview"}, {"Profiles", "Profiles"}, {"Share", "Share"},
+        {"Undo", "Undo"}, {"Reset", "Reset"}, {"Support", "Support"} }
+    for index, view in ipairs(views) do
+        local method = view[2]
+        Button(panel, view[1], 18 + (index-1)*94, -530, 88, function() ns.Workflow[method]() end)
+    end
+    panel.profile = Text(panel, 12, 18, -564, 560)
+    panel.enabled = Button(panel, "Disable paging", 18, -600, 140, function()
         local db = ns.Settings.Get()
         if db then ns.Commands.Execute(db.enabled and "off" or "on") end
     end)
-    Button(panel, "Close", 476, -530, 100, function() panel:Hide() end)
+    Button(panel, "Close", 476, -600, 100, function() panel:Hide() end)
     if ns.Frames.header.HookScript then ns.Frames.header:HookScript("OnAttributeChanged", QueueRefresh) end
     Fit()
     panel:Hide()
@@ -214,6 +230,12 @@ function P.Toggle()
     if not ns.Settings.Get() then return end
     if not panel then Create() end
     if panel:IsShown() then panel:Hide() else panel:Show() end
+end
+
+function P.Show()
+    if not ns.Settings.Get() then return end
+    if not panel then Create() end
+    if not panel:IsShown() then panel:Show() end
 end
 
 function P.Frame() return panel end

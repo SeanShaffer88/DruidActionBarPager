@@ -133,12 +133,13 @@ local function ShowBars()
 end
 
 local function ShowHelp()
+    Print("  /dabp preview <form> <page> | undo | profiles | share | import | support")
     Print("commands (/dabp or /druidactionbarpager):")
     Print("  /dabp                 - show current page for each form")
     Print("  /dabp <form> <page>   - set a page, e.g. /dabp bear 2")
     Print("  /dabp <form> 0        - don't switch pages for that form")
     Print("  /dabp on | off        - enable or disable paging")
-    Print("  /dabp reset           - restore default pages")
+    Print("  /dabp reset           - review default pages before applying")
     Print("  /dabp bars            - list additional action bars")
     Print("  /dabp bar <n> on|off  - select or remove a listed extra bar")
     Print("  /dabp bar slot <n> off - remove saved extra bar slot 1-" .. C.MAX_ADDITIONAL_BARS)
@@ -240,14 +241,8 @@ end
 -- bar needs rebuilding.
 local function ApplySetting(db, cmd, arg)
     if cmd == "on" or cmd == "off" then
-        db.enabled = (cmd == "on")
+        ns.Settings.SetEnabled(cmd == "on")
         Print(db.enabled and "paging enabled." or "paging disabled.")
-        return true
-    end
-    if cmd == "reset" then
-        for form, page in pairs(C.DEFAULT_PAGES) do db.pages[form] = page end
-        ns.Settings.SetPage("prowl", 0)
-        Print("pages reset to defaults.")
         return true
     end
     if cmd == "bar" then return SetExtraBar(db, arg) end
@@ -272,9 +267,9 @@ local VIEWS = {
 
 -- Splits the input into a lowercase command and its argument.
 local function ParseInput(input)
-    local text = (input or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
+    local text = (input or ""):gsub("^%s+", ""):gsub("%s+$", "")
     local cmd, arg = text:match("^(%S*)%s*(.-)$")
-    return cmd, arg
+    return cmd:lower(), arg
 end
 
 local function HandleSlash(input)
@@ -290,6 +285,19 @@ local function HandleSlash(input)
     local db = ns.Settings.Get()
     if not db then
         Print("settings are not loaded yet.")
+        return
+    end
+
+    if cmd == "preview" then
+        local form, page = arg:match("^(%S+)%s+(%S+)$")
+        if arg == "" then ns.Workflow.Preview()
+        elseif not form or not ns.Workflow.Preview(form:lower(), page) then Print("use /dabp preview <form> <page 0-10>.") end
+        return
+    end
+    local workflows = {undo="Undo", reset="Reset", profiles="Profiles", share="Share", support="Support"}
+    if workflows[cmd] then ns.Workflow[workflows[cmd]](); return end
+    if cmd == "import" then
+        if arg == "" then ns.Workflow.Share() else ns.Workflow.ImportReview(arg) end
         return
     end
 
