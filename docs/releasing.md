@@ -2,8 +2,8 @@
 
 The packager uses Python's standard library. From the repository root:
 
-    python -B tools/package_release.py --tag v1.2.1 --output <outside-addon-directory>
-    python -B tools/package_release.py --tag v1.2.1 --check <archive.zip>
+    python -B tools/package_release.py --tag v1.3.0 --output <outside-addon-directory>
+    python -B tools/package_release.py --tag v1.3.0 --check <archive.zip>
     python -B -m unittest discover -s tests -p "test_*.py"
 
 The TOC version must match the explicit tag. Inventory must equal the TOC's Lua files plus declared bindings, metadata and media. Symlinks, unsafe paths and case aliases are refused. Archives contain one DruidActionBarPager directory, sorted entries, stored bytes, fixed timestamps and permissions. Known UTF-8 text uses LF in the package; CRLF checkouts normalize to the same bytes. Binary images are unchanged. The .gitattributes file records the same contract for future checkouts. Verification compares every archive entry with this canonical source representation.
