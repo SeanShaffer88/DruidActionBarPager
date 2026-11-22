@@ -275,6 +275,23 @@ local methods = {
         }
     end,
     SetText = function(self, value) self.text = value end,
+    GetText = function(self) return self.text or "" end,
+    SetAutoFocus = function(self, value) self.autoFocus = value end,
+    SetScrollChild = function(self, child) self.scrollChild = child end,
+    SetMultiLine = function(self, value) self.multiline = value end,
+    SetMaxLetters = function(self, value) self.maxLetters = value end,
+    SetFontObject = function(self, value) self.fontObject = value end,
+    SetFocus = function(self)
+        self.editFocus = true
+        if self.scripts and self.scripts.OnEditFocusGained then self.scripts.OnEditFocusGained(self) end
+    end,
+    ClearFocus = function(self) self.editFocus = false end,
+    HighlightText = function(self) self.selected = true end,
+    SetFrameLevel = function(self, value) self.level = value end,
+    GetFrameLevel = function(self) return self.level or 0 end,
+    CreateTexture = function()
+        return { SetAllPoints = function() end, SetTexture = function(self, value) self.texture = value end }
+    end,
     GetWidth = function(self) return self.size and self.size[1] or 1920 end,
     GetHeight = function(self) return self.size and self.size[2] or 1080 end,
     SetScale = function(self, value) self.scale = value end,
@@ -384,6 +401,12 @@ UIParent = newFrame("UIParent", false)
 CreateFrame = function(frameType, name, parent, template)
     local f = newFrame(name, template and template:find("Secure") ~= nil, frameType)
     f.parent = parent
+    if template and template:find("BasicFrameTemplate", 1, true) then
+        local close = newFrame(nil, false, "Button")
+        close.parent = f
+        close:SetScript("OnClick", function() f:Hide() end)
+        f.CloseButton = close
+    end
     if name then _G[name] = f end
     return f
 end

@@ -13,7 +13,7 @@ for index = 1, 12 do
 end
 local ns = H.load(ADDON_FILES, { version = 3, pages = { bear = 2, cat = 3 }, additionalBars = {} })
 H.runTimers(); H.gameEvaluate()
-check("v3 migration preserves Cat and defaults Prowl to inherit", ns.Settings.Get().version == 4
+check("v3 migration preserves Cat and defaults Prowl to inherit", ns.Settings.Get().version == 5
     and ns.Settings.Get().pages.cat == 3 and ns.Settings.Get().prowlPage == 0)
 H.setForm(2); H.setSpecialState("stealth", true); H.gameEvaluate()
 check("default Prowl inherits Cat", H.buttons[1].attrs.actionpage == 3)
@@ -48,7 +48,7 @@ ns.Commands.Execute("config")
 local panel = ns.MappingPanel.Frame()
 check("mapping panel opens unprotected without scanning", panel:IsShown() and not panel.prot
     and H.enumerateCount() == enumeration)
-check("panel is compact clamped and has no idle ticker", panel.size[1] == 600 and panel.size[2] == 580
+check("panel is compact clamped and has no idle ticker", panel.size[1] == 600 and panel.size[2] == 640
     and panel.clamped and panel:GetScript("OnUpdate") == nil)
 panel:GetScript("OnKeyDown")(panel, "TAB")
 check("Tab focuses a visible native control", ns.MappingPanel.Controls()[1].highlighted)
@@ -69,7 +69,7 @@ check("panel placement persists through validated settings",
     ns.Settings.Get().mappingWindow.point == "TOPLEFT" and ns.Settings.Get().mappingWindow.x == 33)
 UIParent:SetSize(800, 400)
 ns.MappingPanel.Refresh()
-check("small UI canvas fits compact panel", panel.scale < 1 and panel.scale * 580 <= 400)
+check("small UI canvas fits compact panel", panel.scale < 1 and panel.scale * 640 <= 400)
 ns.Commands.Execute("cat 4"); ns.Commands.Execute("moonkin 4")
 check("shared form page has an informational warning", #ns.Mapping.Snapshot().warnings > 0)
 check("compatibility describes named mock evidence without an invented version",
@@ -92,6 +92,9 @@ check("cleared extras disappear from mapping snapshot", ns.Mapping.Snapshot().ex
 ns.Commands.Execute("off"); H.gameEvaluate()
 check("disabled ownership is explicit", ns.Mapping.Snapshot().state == "Disabled")
 ns.Commands.Execute("reset")
+for _, button in ipairs(ns.Workflow.Frame().buttons) do
+    if button.text == "Apply reviewed mapping" then button:GetScript("OnClick")(button) end
+end
 check("reset also restores inherited Prowl behavior", ns.Settings.Get().prowlPage == 0)
 panel:GetScript("OnKeyDown")(panel, "TAB")
 H.setCombat(true, true); H.fire("PLAYER_REGEN_DISABLED")

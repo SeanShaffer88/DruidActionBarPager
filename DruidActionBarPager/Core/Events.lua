@@ -29,6 +29,11 @@ local function OnPlayerLogin(self)
     self:RegisterEvent("UPDATE_STEALTH")
     self:RegisterEvent("PLAYER_REGEN_DISABLED")
     self:RegisterEvent("ACTIONBAR_PAGE_CHANGED")
+    for _, event in ipairs({ "PLAYER_DEAD", "PLAYER_ALIVE", "PLAYER_UNGHOST", "ACTIONBAR_SLOT_CHANGED",
+        "ACTIVE_TALENT_GROUP_CHANGED", "PLAYER_SPECIALIZATION_CHANGED" }) do
+        pcall(self.RegisterEvent, self, event)
+    end
+    if ns.Profiles then ns.Profiles.OnContext() end
     lastFormSignature = ns.Forms.Signature()
     ns.Rebuild.Now(true)
     builtOnLogin = true
@@ -37,6 +42,7 @@ local function OnPlayerLogin(self)
 end
 
 local function OnRegenEnabled()
+    if ns.Profiles then ns.Profiles.OnContext() end
     ns.Rebuild.FlushPending()
     ns.KeyBindings.FlushPending()
 end
@@ -67,6 +73,7 @@ local function NeedsRescan()
 end
 
 local function OnEnteringWorld()
+    if ns.Profiles then ns.Profiles.OnContext() end
     -- Skip a back-to-back rebuild on the initial login when OnPlayerLogin just
     -- attached the live bars; still schedule the delayed check for addons that
     -- finish building or replacing bars a moment after entering the world.
@@ -83,6 +90,12 @@ local function OnEnteringWorld()
     end
 end
 
+local function OnProfileContext(_, unit)
+    if unit == nil or type(unit) ~= "string" or unit == "player" then
+        if ns.Profiles then ns.Profiles.OnContext() end
+    end
+end
+
 local handlers = {
     ADDON_LOADED = OnAddonLoaded,
     PLAYER_LOGIN = OnPlayerLogin,
@@ -95,11 +108,18 @@ local handlers = {
     UPDATE_STEALTH = function() end,
     PLAYER_REGEN_DISABLED = function() end,
     ACTIONBAR_PAGE_CHANGED = function() end,
+    ACTIONBAR_SLOT_CHANGED = function() end,
+    ACTIVE_TALENT_GROUP_CHANGED = function() if ns.Profiles then ns.Profiles.OnContext() end end,
+    PLAYER_SPECIALIZATION_CHANGED = OnProfileContext,
+    PLAYER_DEAD = function() end,
+    PLAYER_ALIVE = OnProfileContext,
+    PLAYER_UNGHOST = OnProfileContext,
 }
 
 local function OnEvent(self, event, arg1, arg2)
     local handler = handlers[event]
     if handler then handler(self, arg1, arg2) else OnFormListEvent() end
+    if ns.Workflow and ns.Workflow.OnEvent then ns.Workflow.OnEvent(event, arg1, arg2) end
     if ns.MappingPanel then ns.MappingPanel.Refresh() end
 end
 
