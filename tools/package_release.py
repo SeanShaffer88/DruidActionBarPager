@@ -2,6 +2,7 @@
 from __future__ import annotations
 import argparse
 import hashlib
+import json
 from pathlib import Path, PurePosixPath
 import re
 from zipfile import ZIP_STORED, ZipFile, ZipInfo
@@ -78,17 +79,22 @@ def verify(root, archive, tag):
                 raise ValueError(f'Noncanonical metadata: {entry.filename}')
 
 
-def build(root, output, tag):
-    root, output = root.resolve(), output.resolve()
-    addon = root / ADDON
-    if output == addon or addon in output.parents:
-        raise ValueError('Artifacts cannot be written into addon sources')
+def package_inputs(root, tag):
     version, files = manifest(root, tag)
     changelog = files['CHANGELOG.md'].read_text(encoding='utf-8')
     heading = f'## [{version}]'
     if heading not in changelog:
         raise ValueError('Current release notes are missing')
-    notes_text = changelog.split(heading, 1)[1].split('\n## [', 1)[0].strip()
+    notes = changelog.split(heading, 1)[1].split('\n## [', 1)[0].strip()
+    return version, files, notes
+
+
+def build(root, output, tag):
+    root, output = root.resolve(), output.resolve()
+    addon = root / ADDON
+    if output == addon or addon in output.parents:
+        raise ValueError('Artifacts cannot be written into addon sources')
+    version, files, notes_text = package_inputs(root, tag)
     output.mkdir(parents=True, exist_ok=True)
     archive = output / f'{ADDON}-{version}.zip'
     with ZipFile(archive, 'w', compression=ZIP_STORED) as package:
@@ -111,17 +117,34 @@ def main():
     cli.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
     cli.add_argument('--output', type=Path)
     cli.add_argument('--tag', required=True)
-    cli.add_argument('--check', type=Path)
+    mode = cli.add_mutually_exclusive_group()
+    mode.add_argument('--check', type=Path)
+    mode.add_argument('--plan-json', action='store_true', help='Validate and list package files without writing a ZIP')
+    cli.add_argument('--json', action='store_true', help='Return verification or packaging details as JSON')
     args = cli.parse_args()
     try:
-        if args.check:
+        if args.plan_json:
+            version, files, _ = package_inputs(args.root, args.tag)
+            print(json.dumps({
+                'version': version,
+                'archive': f'{ADDON}-{version}.zip',
+                'files': [f'{ADDON}/{name}' for name in sorted(files)],
+            }))
+        elif args.check:
             verify(args.root, args.check, args.tag)
-            print(f'Verified {args.check}')
+            if args.json:
+                print(json.dumps({'archive': str(args.check), 'verified': True}))
+            else:
+                print(f'Verified {args.check}')
         else:
             if args.output is None:
                 cli.error('--output is required for packaging')
-            for path in build(args.root, args.output, args.tag):
-                print(path)
+            archive, checksum, notes = build(args.root, args.output, args.tag)
+            if args.json:
+                print(json.dumps({'archive': str(archive), 'checksum': str(checksum), 'release_notes': str(notes)}))
+            else:
+                for path in (archive, checksum, notes):
+                    print(path)
     except (OSError, ValueError, KeyError) as error:
         cli.exit(1, f'Packaging failed: {error}\n')
 

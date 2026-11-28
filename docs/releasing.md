@@ -11,3 +11,9 @@ The TOC version must match the explicit tag. Inventory must equal the TOC's Lua 
 Pull requests run addon and packaging regressions and build the same archive on Linux and Windows. A version-tag push, or manual dispatch naming an existing version tag, verifies the exact tag commit before packaging. Publishing waits for both regression/package verification and byte-identical Windows parity. The release job consumes the verified artifact without re-zipping it, verifies its checksum, and creates the release with both assets together.
 
 An existing release is never clobbered. A rerun downloads its existing assets and matches their checksum manifest and ZIP bytes against the verified artifact. A mismatch fails for explicit investigation. Newly hosted assets receive the same readback comparison. Publication has not been exercised by local mock tests; CI and hosted-asset verification supply that evidence when a future tag is authorized.
+
+Run `python -B tools/package_release.py --tag vX.Y.Z --plan-json` to check the
+release version and preview its file list without writing anything. Replace
+`vX.Y.Z` with the version in the addon's TOC.
+
+Add `--json` to a package build or to `--check ARCHIVE.zip` to report the result as JSON.

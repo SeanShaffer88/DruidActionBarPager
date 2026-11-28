@@ -1,8 +1,11 @@
 import hashlib
 import importlib.util
+import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from zipfile import ZipFile, ZipInfo, ZIP_STORED
@@ -27,6 +30,25 @@ class PackageTests(unittest.TestCase):
 
     def build(self, name='one'):
         return package.build(self.root, self.base / name, self.tag)
+
+    def test_read_only_json_plan_matches_zip(self):
+        completed = subprocess.run(
+            [sys.executable, '-B', str(ROOT / 'tools/package_release.py'), '--root',
+             str(self.root), '--tag', self.tag, '--plan-json'],
+            capture_output=True, check=True,
+        )
+        report = json.loads(completed.stdout)
+        self.assertFalse(list(self.base.glob('**/*.zip')))
+        archive, _, _ = self.build()
+        self.assertEqual(report['archive'], archive.name)
+        with ZipFile(archive) as zipped:
+            self.assertEqual(report['files'], zipped.namelist())
+        verified = subprocess.run(
+            [sys.executable, '-B', str(ROOT / 'tools/package_release.py'), '--root',
+             str(self.root), '--tag', self.tag, '--check', str(archive), '--json'],
+            capture_output=True, check=True,
+        )
+        self.assertEqual(json.loads(verified.stdout), {'archive': str(archive), 'verified': True})
 
     def test_repeat_mtime_and_lf_crlf_are_byte_identical(self):
         first, checksum, notes = self.build()
